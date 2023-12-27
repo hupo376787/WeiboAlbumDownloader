@@ -40,6 +40,7 @@ namespace WeiboAlbumDownloader
         {
             InitializeComponent();
             AppendLog("数据源选择weibo.com的时候，程序是从微博相册采集数据，包括微博配图和头像相册等，但是没有视频；数据源选择weibo.cn的时候，程序是从微博时间流中采集数据，包括微博配图以及发布的视频。", MessageEnum.Info);
+
             InitData();
 
             Directory.CreateDirectory(downloadFolder);
@@ -47,16 +48,19 @@ namespace WeiboAlbumDownloader
             ListView_Messages.ItemsSource = Messages;
 
             //定时任务
-            var cron = Crontab.Parse(settings?.Crontab);
-            Task.Factory.StartNew(async () =>
+            if (settings?.Crontab != null)
             {
-                while (true)
+                var cron = Crontab.Parse(settings?.Crontab);
+                Task.Factory.StartNew(async () =>
                 {
-                    await Task.Delay((int)cron.GetSleepMilliseconds(DateTime.Now));
-                    Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "开启了定时任务");
-                    await Start();
-                }
-            }, TaskCreationOptions.LongRunning);
+                    while (true)
+                    {
+                        await Task.Delay((int)cron.GetSleepMilliseconds(DateTime.Now));
+                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "开启了定时任务");
+                        await Start();
+                    }
+                }, TaskCreationOptions.LongRunning);
+            }
         }
 
         private async void StartDownLoad(object sender, RoutedEventArgs e)
@@ -456,6 +460,15 @@ namespace WeiboAlbumDownloader
 
         private void InitData()
         {
+            if (!File.Exists("uidList.txt"))
+            {
+                using (File.Create("uidList.txt")) { }
+            }
+            if (!File.Exists("Settings.json"))
+            {
+                File.WriteAllText("Settings.json", JsonConvert.SerializeObject(new SettingsModel(), Formatting.Indented));
+            }
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 //Read users
