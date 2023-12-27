@@ -54,6 +54,8 @@ namespace WeiboAlbumDownloader.Helpers
                         FileStream lxFS = File.Create(fileName);
                         await stream.CopyToAsync(lxFS);
                         lxFS.Close();
+                        lxFS.Dispose();
+                        stream.Dispose();
                     }
 
                     string text = reader.ReadToEnd();

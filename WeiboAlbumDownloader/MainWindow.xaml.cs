@@ -241,7 +241,16 @@ namespace WeiboAlbumDownloader
 
                                         Image_Head?.Dispatcher.InvokeAsync(() =>
                                         {
-                                            Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
+                                            var bytes = File.ReadAllBytes(fileName);
+                                            MemoryStream ms = new MemoryStream(bytes);
+                                            BitmapImage bi = new BitmapImage();
+                                            bi.BeginInit();
+                                            bi.StreamSource = ms;
+                                            bi.EndInit();
+
+                                            Image_Head.ImageSource = bi;
+
+                                            //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
                                             TextBlock_NickName.Text = nickName;
                                             TextBlock_WeiboDesc.Text = weiboDesc;
                                         });
