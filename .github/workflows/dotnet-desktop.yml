@@ -87,4 +87,4 @@ jobs:
       if: ${{ success() }}
       with:
         name: WeiboAlbumDownloader_Build
-        path: ./bin/Release/
+        path: ./bin/Debug/net6.0-windows/
