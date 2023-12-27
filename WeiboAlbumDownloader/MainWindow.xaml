@@ -1,0 +1,197 @@
+﻿<mica:MicaWindow
+  x:Class="WeiboAlbumDownloader.MainWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:conv="clr-namespace:WeiboAlbumDownloader.Converters"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:local="clr-namespace:WeiboAlbumDownloader"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
+  Title="微博相册下载"
+  Width="950"
+  Height="600"
+  FontFamily="宋体"
+  Icon="/weibo.ico"
+  SystemBackdropType="Acrylic"
+  TitleBarType="WinUI"
+  mc:Ignorable="d">
+  <Window.Resources>
+    <conv:ColorConverter x:Key="colorConverter" />
+  </Window.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition />
+    </Grid.RowDefinitions>
+
+    <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
+      <TextBlock
+        Margin="8,0,0,0"
+        VerticalAlignment="Center"
+        Text="数据源" />
+      <mica:ToggleSwitch
+        x:Name="ToggleSwitch_Source"
+        Margin="8"
+        Click="ToggleSwitch_Source_Click"
+        Content="weibo.cn"
+        IsChecked="True"
+        ToolTip="数据源从weibo.com还是从weibo.cn获取" />
+      <mica:TextBox
+        x:Name="TextBox_WeiboId"
+        Width="140"
+        Height="32"
+        Margin="8,0"
+        ToolTip="填写uid单用户下载或者uidList.txt进行批量下载"
+        Watermark="uid" />
+      <mica:Button
+        Width="160"
+        Height="32"
+        Margin="8,0"
+        Click="StartDownLoad"
+        Content="开始下载" />
+      <mica:Button
+        Width="140"
+        Height="32"
+        Margin="8,0"
+        Click="StopDownLoad"
+        Content="停止下载" />
+      <mica:Button
+        Width="140"
+        Height="32"
+        Margin="8,0"
+        Click="OpenDir"
+        Content="打开下载目录" />
+    </StackPanel>
+
+    <TextBlock
+      Grid.Row="1"
+      Margin="8"
+      VerticalAlignment="Center"
+      Foreground="Gray"
+      TextWrapping="Wrap">
+      <Run Text="PC打开" />
+      <Hyperlink NavigateUri="https://weibo.com/" RequestNavigate="Hyperlink_RequestNavigate">weibo.com</Hyperlink>
+      <Run Text="，点击某一用户头像，进入主页。uid就是地址栏中的最后一串数字，比如https://weibo.com/u/1000000000。&#x0a;按F12进入控制台，网络-全部，在名称栏选择uid，标头-请求标头-Cookie。右键复制后请填入到Seetings.json。" />
+      <Hyperlink NavigateUri="https://weibo.com/" RequestNavigate="Hyperlink_RequestNavigate">weibo.com</Hyperlink>
+      <Run Text="和" />
+      <Hyperlink NavigateUri="https://weibo.cn" RequestNavigate="Hyperlink_RequestNavigate">weibo.cn</Hyperlink>
+      <Run Text="cookie不一样，请注意区分。" />
+    </TextBlock>
+
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="2*" />
+      </Grid.ColumnDefinitions>
+      <StackPanel VerticalAlignment="Center">
+        <Border
+          Width="256"
+          Height="256"
+          BorderThickness="8"
+          CornerRadius="128">
+          <Border.Background>
+            <ImageBrush
+              x:Name="Image_Head"
+              ImageSource="/weibo.ico"
+              Stretch="Fill" />
+          </Border.Background>
+          <Border.Style>
+            <Style TargetType="{x:Type FrameworkElement}">
+              <Setter Property="Width" Value="60" />
+              <Setter Property="Height" Value="40" />
+              <Setter Property="Effect">
+                <Setter.Value>
+                  <DropShadowEffect
+                    x:Name="OSE"
+                    BlurRadius="24"
+                    Direction="0"
+                    Opacity="1"
+                    RenderingBias="Quality"
+                    ShadowDepth="0"
+                    Color="#FFBF00">
+                    <Storyboard.TargetProperty>
+                      BlurRadius
+                    </Storyboard.TargetProperty>
+                  </DropShadowEffect>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </Border.Style>
+          <Border.Triggers>
+            <EventTrigger RoutedEvent="Loaded">
+              <BeginStoryboard>
+                <Storyboard>
+                  <DoubleAnimation
+                    AutoReverse="True"
+                    BeginTime="00:00:00"
+                    RepeatBehavior="Forever"
+                    Storyboard.TargetProperty="(FrameworkElement.Effect).(DropShadowEffect.BlurRadius)"
+                    From="30"
+                    To="100"
+                    Duration="00:00:1.500" />
+                  <ColorAnimationUsingKeyFrames
+                    AutoReverse="True"
+                    RepeatBehavior="Forever"
+                    Storyboard.TargetProperty="(FrameworkElement.Effect).(DropShadowEffect.Color)">
+                    <EasingColorKeyFrame KeyTime="0:0:1.500" Value="#FFBF00" />
+                  </ColorAnimationUsingKeyFrames>
+                </Storyboard>
+              </BeginStoryboard>
+            </EventTrigger>
+          </Border.Triggers>
+        </Border>
+        <TextBlock
+          x:Name="TextBlock_NickName"
+          Margin="16"
+          HorizontalAlignment="Center"
+          d:Text="昵称"
+          FontSize="36"
+          FontWeight="Bold"
+          Foreground="#FFBF00" />
+        <TextBlock
+          x:Name="TextBlock_WeiboDesc"
+          HorizontalAlignment="Center"
+          d:Text="微博[888] 关注[274] 粉丝[7.9万] 分组[1]"
+          FontSize="16"
+          Foreground="#EBB000" />
+      </StackPanel>
+      <ListView
+        x:Name="ListView_Messages"
+        Grid.Column="1"
+        Margin="6"
+        Background="Transparent"
+        ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListView.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="复制" Click="ListView_CopyLog"/>
+          </ContextMenu>
+        </ListView.ContextMenu>
+        <ListView.ItemTemplate>
+          <DataTemplate>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="50" />
+                <ColumnDefinition Width="60" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Ellipse
+                Width="14"
+                Height="14"
+                VerticalAlignment="Top"
+                Fill="{Binding Path=MessageType, Converter={StaticResource colorConverter}}" />
+              <TextBlock Grid.Column="1" Text="{Binding MessageType, Mode=OneWay}" />
+              <TextBlock Grid.Column="2" Text="{Binding Time, Mode=OneWay}" />
+              <TextBlock
+                Grid.Column="3"
+                Text="{Binding Message, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            </Grid>
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>
+    </Grid>
+  </Grid>
+</mica:MicaWindow>
