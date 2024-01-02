@@ -33,6 +33,8 @@ namespace WeiboAlbumDownloader
         private SettingsModel settings;
         private string cookie;
         private List<string> uids = new List<string>();
+        //用来跳过到下一个uid的计数。如果当前uid下载的时候已存在文件超过此计数，则判定下载过了。
+        private int countDownloadedSkipToNextUser;
         private CancellationTokenSource cancellationTokenSource;
         public ObservableCollection<MessageModel> Messages { get; set; } = new ObservableCollection<MessageModel>();
 
@@ -84,6 +86,7 @@ namespace WeiboAlbumDownloader
 
                 await Task.Run(async () =>
                 {
+                    bool isSkip = false;
                     foreach (var userId in uids)
                     {
                         if (string.IsNullOrEmpty(userId))
@@ -93,12 +96,18 @@ namespace WeiboAlbumDownloader
                         else
                         {
                             string nickName = string.Empty;
+                            countDownloadedSkipToNextUser = 0;
+                            isSkip = false;
                             AppendLog("开始下载" + userId, MessageEnum.Info);
 
                             //源是weibo.com的时候，获取的是获取相册列表，json格式
                             if (isFromWeiboCom)
                             {
                                 string albumsUrl = $"https://photo.weibo.com/albums/get_all?uid={userId}&page=1";
+                                TextBlock_UID?.Dispatcher.InvokeAsync(() =>
+                                {
+                                    TextBlock_UID.Text = userId;
+                                });
 
                                 var albums = await HttpHelper.GetAsync<UserAlbumModel>(albumsUrl, isFromWeiboCom, cookie);
                                 Directory.CreateDirectory(downloadFolder + userId);
@@ -106,13 +115,17 @@ namespace WeiboAlbumDownloader
                                 {
                                     foreach (var item in albums?.data?.album_list)
                                     {
-                                        //if (item.type != 3)
-                                        //    continue;
+                                        if (isSkip)
+                                            break;
+
                                         Directory.CreateDirectory(downloadFolder + userId + "//" + item.caption);
 
                                         int page = 1;
                                         while (true)
                                         {
+                                            if (isSkip)
+                                                break;
+
                                             string albumUrl = $"https://photo.weibo.com/photos/get_all?uid={userId}&album_id={item.album_id}&count={countPerPage}&page={page}&type={item.type}";
                                             var photos = await HttpHelper.GetAsync<AlbumDetailModel>(albumUrl, isFromWeiboCom, cookie);
                                             if (photos != null && photos.data?.photo_list != null && photos.data?.photo_list.Count > 0)
@@ -149,6 +162,7 @@ namespace WeiboAlbumDownloader
                                                     if (File.Exists(fileName))
                                                     {
                                                         AppendLog("文件已存在，跳过下载" + fileName, MessageEnum.Warning);
+                                                        countDownloadedSkipToNextUser++;
                                                         await Task.Delay(500);
                                                         continue;
                                                     }
@@ -175,6 +189,14 @@ namespace WeiboAlbumDownloader
                                                 break;
                                             }
 
+                                            //已存在的文件超过设置值，判定该用户下载过了
+                                            if (settings.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            {
+                                                AppendLog($"已存在的文件超过设置值{countDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                isSkip = true;
+                                                break;
+                                            }
+
                                             page++;
                                             //通过加入随机等待避免被限制。爬虫速度过快容易被系统限制(一段时间后限制会自动解除)，加入随机等待模拟人的操作，可降低被系统限制的风险。默认是每爬取1到5页随机等待6到10秒，如果仍然被限，可适当增加sleep时间
                                             Random rd = new Random();
@@ -195,6 +217,9 @@ namespace WeiboAlbumDownloader
                                 Directory.CreateDirectory(downloadFolder + userId + "//" + "微博配图");
                                 while (true)
                                 {
+                                    if (isSkip)
+                                        break;
+
                                     //filter，0-全部；1-原创；2-图片
                                     //https://weibo.cn/xxxxxxxxxxxxx?page=2
                                     //https://weibo.cn/xxxxxxxxxxxxx/profile?page=2
@@ -212,7 +237,8 @@ namespace WeiboAlbumDownloader
                                             totalPage = Convert.ToInt32(totalPageHtml[0].Attributes["value"].Value);
                                         }
                                     }
-                                    if (totalPage == -1)
+                                    //当只有一页数据的时候，totalPage获取不到。需要叠加判定doc.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "c").ToList().Count
+                                    if (totalPage == -1 && doc.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "c").ToList().Count == 0)
                                     {
                                         AppendLog("获取总页数失败，请重新登录https://weibo.cn/获取Cookie重试", MessageEnum.Error);
                                         return;
@@ -251,6 +277,7 @@ namespace WeiboAlbumDownloader
                                             Image_Head.ImageSource = bi;
 
                                             //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
+                                            TextBlock_UID.Text = userId;
                                             TextBlock_NickName.Text = nickName;
                                             TextBlock_WeiboDesc.Text = weiboDesc;
                                         });
@@ -262,6 +289,9 @@ namespace WeiboAlbumDownloader
                                     var nodes = doc.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "c").ToList();
                                     foreach (var node in nodes)
                                     {
+                                        if (isSkip)
+                                            break;
+
                                         if (cancellationTokenSource.IsCancellationRequested)
                                         {
                                             AppendLog("用户手动终止。", MessageEnum.Info);
@@ -296,6 +326,9 @@ namespace WeiboAlbumDownloader
                                         var list = doc1.DocumentNode.Descendants("a").ToList();
                                         foreach (var item in list)
                                         {
+                                            if (isSkip)
+                                                break;
+
                                             if (item.InnerText.Contains("组图共"))
                                             {
                                                 photoListUrl = item.Attributes["href"].Value;
@@ -372,6 +405,9 @@ namespace WeiboAlbumDownloader
                                         int photoCount = 1;
                                         foreach (var item in originalPics)
                                         {
+                                            if (isSkip)
+                                                break;
+
                                             if (string.IsNullOrEmpty(item))
                                                 continue;
 
@@ -386,10 +422,19 @@ namespace WeiboAlbumDownloader
                                             else
                                                 fileName += ".jpg";
                                             Debug.WriteLine(fileName);
+
+                                            //已存在的文件超过设置值，判定该用户下载过了
+                                            if (settings.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            {
+                                                AppendLog($"已存在的文件超过设置值{countDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                isSkip = true;
+                                            }
+
                                             //已经下载过的跳过
                                             if (File.Exists(fileName))
                                             {
                                                 AppendLog("文件已存在，跳过下载" + fileName, MessageEnum.Warning);
+                                                countDownloadedSkipToNextUser++;
                                                 await Task.Delay(500);
                                                 continue;
                                             }

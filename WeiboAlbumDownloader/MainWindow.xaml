@@ -143,6 +143,14 @@
           </Border.Triggers>
         </Border>
         <TextBlock
+          x:Name="TextBlock_UID"
+          Margin="16,16,16,0"
+          HorizontalAlignment="Center"
+          d:Text="uid"
+          FontSize="22"
+          FontWeight="Bold"
+          Foreground="#FFBF00" />
+        <TextBlock
           x:Name="TextBlock_NickName"
           Margin="16"
           HorizontalAlignment="Center"
@@ -165,7 +173,7 @@
         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
         <ListView.ContextMenu>
           <ContextMenu>
-            <MenuItem Header="复制" Click="ListView_CopyLog"/>
+            <MenuItem Click="ListView_CopyLog" Header="复制" />
           </ContextMenu>
         </ListView.ContextMenu>
         <ListView.ItemTemplate>
