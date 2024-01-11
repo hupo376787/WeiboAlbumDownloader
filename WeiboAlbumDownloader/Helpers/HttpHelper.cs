@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
+using WeiboAlbumDownloader.Enums;
 
 namespace WeiboAlbumDownloader.Helpers
 {
@@ -17,13 +18,14 @@ namespace WeiboAlbumDownloader.Helpers
         /// <param name="url"></param>
         /// <param name="fileName">不为空的时候，表示存图</param>
         /// <returns></returns>
-        public static async Task<T> GetAsync<T>(string url, bool isFromWeiboCom, string cookie, string fileName = "")
+        public static async Task<T> GetAsync<T>(string url, WeiboDataSource dataSource, string cookie, string fileName = "")
         {
             try
             {
                 myHttpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                myHttpWebRequest.AllowAutoRedirect = true;
                 //加上UA就请求失败，是啥原因
-                //myHttpWebRequest.UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1";
+                //myHttpWebRequest.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
                 myHttpWebRequest.CookieContainer = new CookieContainer();
 
                 var array = cookie.Split(";");
@@ -35,13 +37,13 @@ namespace WeiboAlbumDownloader.Helpers
                     //myHttpWebRequest.CookieContainer.Add(
                     //    new Cookie("login_sid_t", "f896b3349c182456456481313fbb262") { Domain = "weibo.com" }
                     //    );
-                    if (isFromWeiboCom)
+                    if (dataSource == WeiboDataSource.WeiboCn)
                     {
-                        myHttpWebRequest.CookieContainer.Add(new Cookie(temp[0].Trim(), temp[1].Trim()) { Domain = "weibo.com" });
+                        myHttpWebRequest.CookieContainer.Add(new Cookie(temp[0].Trim(), temp[1].Trim()) { Domain = "weibo.cn" });
                     }
                     else
                     {
-                        myHttpWebRequest.CookieContainer.Add(new Cookie(temp[0].Trim(), temp[1].Trim()) { Domain = "weibo.cn" });
+                        myHttpWebRequest.CookieContainer.Add(new Cookie(temp[0].Trim(), temp[1].Trim()) { Domain = "weibo.com" });
                     }
                 }
 
@@ -59,7 +61,6 @@ namespace WeiboAlbumDownloader.Helpers
                     }
 
                     string text = reader.ReadToEnd();
-
                     Type type = typeof(T);
                     if (type == typeof(string))
                         return (T)Convert.ChangeType(text, typeof(T));

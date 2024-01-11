@@ -31,13 +31,17 @@
         Margin="8,0,0,0"
         VerticalAlignment="Center"
         Text="数据源" />
-      <mica:ToggleSwitch
+      <!--<mica:ToggleSwitch
         x:Name="ToggleSwitch_Source"
         Margin="8"
         Click="ToggleSwitch_Source_Click"
         Content="weibo.cn"
         IsChecked="True"
-        ToolTip="数据源从weibo.com还是从weibo.cn获取" />
+        ToolTip="数据源从weibo.com还是从weibo.cn获取" />-->
+      <ComboBox
+        x:Name="ComboBox_DataSource"
+        Margin="8"
+        SelectionChanged="ComboBox_DataSource_SelectionChanged" />
       <mica:TextBox
         x:Name="TextBox_WeiboId"
         Width="140"
