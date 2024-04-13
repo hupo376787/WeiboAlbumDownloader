@@ -563,7 +563,7 @@ namespace WeiboAlbumDownloader
                             }
 
                             //单个用户结束下载
-                            string info = $"{userId}{nickName}{DateTime.Now.ToString("HH:mm:ss")}结束下载";
+                            string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken, "微博相册下载", info);
                             AppendLog(info, MessageEnum.Info);
                         }
