@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -42,6 +43,8 @@ namespace WeiboAlbumDownloader
         public MainWindow()
         {
             InitializeComponent();
+
+            GetVersion();
             AppendLog("数据源选择weibo.com的时候，程序是从微博相册采集数据，包括微博配图和头像相册等，但是没有视频；数据源选择weibo.cn的时候，程序是从微博时间流中采集数据，包括微博配图以及发布的视频。", MessageEnum.Info);
 
             InitData();
@@ -75,6 +78,32 @@ namespace WeiboAlbumDownloader
         private void StopDownLoad(object sender, RoutedEventArgs e)
         {
             cancellationTokenSource.Cancel();
+        }
+
+        private async Task GetVersion()
+        {
+            double currentVersion = 1.4;
+            AppendLog($"当前程序版本V{currentVersion}");
+
+            var latestVersionString = await GithubHelper.GetLatestVersion();
+            if (string.IsNullOrEmpty(latestVersionString))
+            {
+                AppendLog("从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版失败，请检查网络或稍后再试", MessageEnum.Warning);
+            }
+            else
+            {
+                var res = double.TryParse(latestVersionString, out double latestVersion);
+                //获取成功
+                if (res)
+                {
+                    if(latestVersion > currentVersion)
+                        AppendLog($"Github最新版为V{latestVersion}。请从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版", MessageEnum.Success);
+                }
+                else
+                {
+                    AppendLog("从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版失败，请检查网络或稍后再试", MessageEnum.Warning);
+                }
+            }
         }
 
         private async Task Start()
@@ -579,7 +608,7 @@ namespace WeiboAlbumDownloader
             }
         }
 
-        private void AppendLog(string text, MessageEnum messageEnum)
+        private void AppendLog(string text, MessageEnum messageEnum = MessageEnum.Info)
         {
             string msg = $"{DateTime.Now} {text}";
             Debug.WriteLine(msg);

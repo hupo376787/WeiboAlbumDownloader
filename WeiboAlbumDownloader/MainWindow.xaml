@@ -101,50 +101,6 @@
               ImageSource="/weibo.ico"
               Stretch="Fill" />
           </Border.Background>
-          <Border.Style>
-            <Style TargetType="{x:Type FrameworkElement}">
-              <Setter Property="Width" Value="60" />
-              <Setter Property="Height" Value="40" />
-              <Setter Property="Effect">
-                <Setter.Value>
-                  <DropShadowEffect
-                    x:Name="OSE"
-                    BlurRadius="24"
-                    Direction="0"
-                    Opacity="1"
-                    RenderingBias="Quality"
-                    ShadowDepth="0"
-                    Color="#FFBF00">
-                    <Storyboard.TargetProperty>
-                      BlurRadius
-                    </Storyboard.TargetProperty>
-                  </DropShadowEffect>
-                </Setter.Value>
-              </Setter>
-            </Style>
-          </Border.Style>
-          <Border.Triggers>
-            <EventTrigger RoutedEvent="Loaded">
-              <BeginStoryboard>
-                <Storyboard>
-                  <DoubleAnimation
-                    AutoReverse="True"
-                    BeginTime="00:00:00"
-                    RepeatBehavior="Forever"
-                    Storyboard.TargetProperty="(FrameworkElement.Effect).(DropShadowEffect.BlurRadius)"
-                    From="30"
-                    To="100"
-                    Duration="00:00:1.500" />
-                  <ColorAnimationUsingKeyFrames
-                    AutoReverse="True"
-                    RepeatBehavior="Forever"
-                    Storyboard.TargetProperty="(FrameworkElement.Effect).(DropShadowEffect.Color)">
-                    <EasingColorKeyFrame KeyTime="0:0:1.500" Value="#FFBF00" />
-                  </ColorAnimationUsingKeyFrames>
-                </Storyboard>
-              </BeginStoryboard>
-            </EventTrigger>
-          </Border.Triggers>
         </Border>
         <TextBlock
           x:Name="TextBlock_UID"
