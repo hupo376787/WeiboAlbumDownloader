@@ -11,9 +11,9 @@
         <ResourceDictionary Source="pack://application:,,,/MicaWPF;component/Styles/Themes/MicaDark.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MicaWPF;component/Styles/MicaWPF.xaml" />
         <mica:ThemeDictionary Theme="Light" />
-        <!-- And Here (You can change to Light or Dark here) -->
+        <!--  And Here (You can change to Light or Dark here)  -->
         <mica:ControlsDictionary />
-        <!-- This is mandatory -->
+        <!--  This is mandatory  -->
 
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>

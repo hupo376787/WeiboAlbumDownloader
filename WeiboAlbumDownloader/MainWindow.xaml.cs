@@ -1,6 +1,9 @@
 ﻿using HtmlAgilityPack;
 using MicaWPF.Controls;
 using Newtonsoft.Json;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,19 +35,19 @@ namespace WeiboAlbumDownloader
         private WeiboDataSource dataSource = WeiboDataSource.WeiboCn;
         private int countPerPage = 100;
         private string downloadFolder = Environment.CurrentDirectory + "//DownLoad//";
-        private SettingsModel settings;
-        private string cookie;
+        private SettingsModel? settings;
+        private string? cookie;
         private List<string> uids = new List<string>();
         //用来跳过到下一个uid的计数。如果当前uid下载的时候已存在文件超过此计数，则判定下载过了。
         private int countDownloadedSkipToNextUser;
-        private CancellationTokenSource cancellationTokenSource;
+        private CancellationTokenSource? cancellationTokenSource;
         public ObservableCollection<MessageModel> Messages { get; set; } = new ObservableCollection<MessageModel>();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            GetVersion();
+            _ = GetVersion();
             AppendLog("数据源选择weibo.com的时候，程序是从微博相册采集数据，包括微博配图和头像相册等，但是没有视频；数据源选择weibo.cn的时候，程序是从微博时间流中采集数据，包括微博配图以及发布的视频。", MessageEnum.Info);
 
             InitData();
@@ -77,7 +80,7 @@ namespace WeiboAlbumDownloader
 
         private void StopDownLoad(object sender, RoutedEventArgs e)
         {
-            cancellationTokenSource.Cancel();
+            cancellationTokenSource?.Cancel();
         }
 
         private async Task GetVersion()
@@ -96,7 +99,7 @@ namespace WeiboAlbumDownloader
                 //获取成功
                 if (res)
                 {
-                    if(latestVersion > currentVersion)
+                    if (latestVersion > currentVersion)
                         AppendLog($"Github最新版为V{latestVersion}。请从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版", MessageEnum.Success);
                 }
                 else
@@ -127,6 +130,7 @@ namespace WeiboAlbumDownloader
                         else
                         {
                             string nickName = string.Empty;
+                            string headUrl = string.Empty;
                             countDownloadedSkipToNextUser = 0;
                             isSkip = false;
                             AppendLog("开始下载" + userId, MessageEnum.Info);
@@ -150,6 +154,11 @@ namespace WeiboAlbumDownloader
                                             break;
 
                                         Directory.CreateDirectory(downloadFolder + userId + "//" + item.caption);
+
+                                        if (item.caption == "头像相册")
+                                        {
+                                            headUrl = item.cover_pic;
+                                        }
 
                                         int page = 1;
                                         while (true)
@@ -256,6 +265,11 @@ namespace WeiboAlbumDownloader
                                         if (isSkip)
                                             break;
 
+                                        if (item.PicTitle == "头像相册")
+                                        {
+                                            headUrl = item.Pic;
+                                        }
+
                                         Directory.CreateDirectory(downloadFolder + userId + "//" + item.PicTitle);
 
                                         long sinceId = 0;
@@ -352,7 +366,7 @@ namespace WeiboAlbumDownloader
                                         if (totalPageHtml.Count > 0)
                                         {
                                             totalPage = Convert.ToInt32(totalPageHtml[0].Attributes["value"].Value);
-                                            AppendLog($"获取到{totalPage}页数据", MessageEnum.Error);
+                                            AppendLog($"获取到{totalPage}页数据", MessageEnum.Info);
                                         }
                                     }
                                     //当只有一页数据的时候，totalPage获取不到。需要叠加判定doc.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "c").ToList().Count
@@ -368,14 +382,14 @@ namespace WeiboAlbumDownloader
                                         var userInfoXmlString = doc.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "u").ToList()?[0].OuterHtml;
                                         var docUser = new HtmlDocument();
                                         docUser.LoadHtml(userInfoXmlString);
-                                        string temp = docUser.DocumentNode.Descendants("img").Where(x => x.Attributes["alt"]?.Value == "头像").ToList()?[0].Attributes["src"].Value;
-                                        nickName = docUser.DocumentNode.Descendants("span").Where(x => x.Attributes["class"]?.Value == "ctt").ToList()?[0].InnerText.Split("&nbsp;")[0];
+                                        string temp = docUser.DocumentNode.Descendants("img").Where(x => x.Attributes["alt"]?.Value == "头像").ToList()?[0].Attributes["src"].Value!;
+                                        nickName = docUser.DocumentNode.Descendants("span").Where(x => x.Attributes["class"]?.Value == "ctt").ToList()?[0].InnerText.Split("&nbsp;")[0]!;
                                         using (File.Create(downloadFolder + userId + "//" + nickName)) { }
 
                                         var desc = docUser.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "tip2").ToList()?[0].InnerText.Split("&nbsp;");
                                         string weiboDesc = string.Join(" ", desc);
 
-                                        string headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(temp).Split("?")[0];
+                                        headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(temp).Split("?")[0];
                                         var fileName = downloadFolder + userId + "//" + Path.GetFileName(headUrl);
                                         //下载头像
                                         if (!File.Exists(fileName))
@@ -592,7 +606,7 @@ namespace WeiboAlbumDownloader
                             }
 
                             //单个用户结束下载
-                            string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载";
+                            string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载<img src=\"{headUrl}\">";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken, "微博相册下载", info);
                             AppendLog(info, MessageEnum.Info);
                         }
@@ -710,7 +724,7 @@ namespace WeiboAlbumDownloader
 
         private void ListView_CopyLog(object sender, RoutedEventArgs e)
         {
-            Clipboard.SetText((ListView_Messages.SelectedItem as MessageModel).Message);
+            Clipboard.SetText((ListView_Messages.SelectedItem as MessageModel)!.Message);
         }
 
         private void ComboBox_DataSource_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -728,6 +742,72 @@ namespace WeiboAlbumDownloader
             {
                 AppendLog("通过weibo.com获取的是用户的ajax相册，可以获取原创微博相册、头像相册、自拍相册等。但是获取不到博文信息，所以无法重命名图片和修改图片日期。貌似还获取不全。不推荐使用！！！", MessageEnum.Info);
             }
+        }
+
+        private void MicaWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Border_Head.Width = Border_Head.Height = Column_LeftGrid.ActualWidth * 0.8;
+            Border_Head.CornerRadius = new CornerRadius(Column_LeftGrid.ActualWidth * 0.8);
+        }
+
+        private void GetCookie(object sender, RoutedEventArgs e)
+        {
+            string loginUrl = "https://passport.weibo.com/sso/signin?entry=wapsso&source=wapssowb&url=https://weibo.cn";
+            if (ComboBox_DataSource.SelectedIndex != 0)
+            {
+                loginUrl = "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&url=https://weibo.com/";
+            }
+
+            IWebDriver driver = new ChromeDriver();
+            driver.Url = loginUrl;
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(60))
+            {
+                PollingInterval = TimeSpan.FromMilliseconds(500),
+            };
+            wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
+            //wait.Until(d => d.FindElement(By.LinkText("title")));
+
+            // 等待页面加载完成并获取页面标题
+            wait.Until(d => d.Title.Equals("微博 – 随时随地发现新鲜事") || d.Title.Equals("我的首页"));
+
+            // 获取页面标题并进行检查
+            string pageTitle = driver.Title;
+            if (pageTitle.Equals("微博 – 随时随地发现新鲜事") || pageTitle.Equals("我的首页"))
+            {
+                AppendLog("扫码登陆成功", MessageEnum.Success);
+                // 获取所有的 Cookie 对象
+                IReadOnlyCollection<OpenQA.Selenium.Cookie> cookies = driver.Manage().Cookies.AllCookies;
+
+                // 将 Cookie 对象转换为一个字符串，格式类似于 HTTP 请求头的 Cookie 字符串
+                string cookie = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
+
+                // 打印 Cookie 字符串
+                Debug.WriteLine(cookie);
+
+                string settingsContent = File.ReadAllText("Settings.json");
+                settings = JsonConvert.DeserializeObject<SettingsModel>(settingsContent);
+                if (settings == null)
+                {
+                    AppendLog("Settings.json文件缺失，请重新下载程序", MessageEnum.Error);
+                    return;
+                }
+                if (dataSource == WeiboDataSource.WeiboCn)
+                {
+                    settings.WeiboCnCookie = cookie;
+                }
+                else
+                {
+                    settings.WeiboComCookie = cookie;
+                }
+                File.WriteAllText("Settings.json", JsonConvert.SerializeObject(settings, Formatting.Indented));
+            }
+            else
+            {
+                Debug.WriteLine("未登录");
+            }
+
+            // 程序结束时，手动关闭浏览器
+            driver.Quit();
         }
     }
 }

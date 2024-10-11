@@ -43,7 +43,7 @@ namespace WeiboAlbumDownloader.Models
         public string Containerid { get; set; }
 
         [JsonProperty("pic")]
-        public Uri Pic { get; set; }
+        public string Pic { get; set; }
     }
 
     public partial class List2
