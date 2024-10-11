@@ -85,7 +85,7 @@ namespace WeiboAlbumDownloader
 
         private async Task GetVersion()
         {
-            double currentVersion = 1.4;
+            double currentVersion = 2.0;
             AppendLog($"当前程序版本V{currentVersion}");
 
             var latestVersionString = await GithubHelper.GetLatestVersion();
