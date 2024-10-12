@@ -27,6 +27,9 @@ namespace WeiboAlbumDownloader
     /// </summary>
     public partial class MainWindow : MicaWindow
     {
+    
+        double currentVersion = 2.0;
+        
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
         /// com2是根据uid获取相册id，https://weibo.com/ajax/profile/getImageWall?uid=10000000000&sinceid=0&has_album=true；根据相册id和sinceid获取图片列表，https://weibo.com/ajax/profile/getAlbumDetail?containerid=123456789000123456_-_pc_profile_album_-_photo_-_camera_-_0_-_%25E5%258E%259F%25E5%2588%259B&since_id=0
@@ -85,7 +88,6 @@ namespace WeiboAlbumDownloader
 
         private async Task GetVersion()
         {
-            double currentVersion = 2.0;
             AppendLog($"当前程序版本V{currentVersion}");
 
             var latestVersionString = await GithubHelper.GetLatestVersion();
@@ -606,7 +608,7 @@ namespace WeiboAlbumDownloader
                             }
 
                             //单个用户结束下载
-                            string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载<img src=\"{headUrl}\">";
+                            string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken, "微博相册下载", info);
                             AppendLog(info, MessageEnum.Info);
                         }
