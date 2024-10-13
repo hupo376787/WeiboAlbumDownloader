@@ -10,7 +10,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,6 +18,7 @@ using TimeCrontab;
 using WeiboAlbumDownloader.Enums;
 using WeiboAlbumDownloader.Helpers;
 using WeiboAlbumDownloader.Models;
+using System.Windows.Controls;
 
 namespace WeiboAlbumDownloader
 {
@@ -27,13 +27,17 @@ namespace WeiboAlbumDownloader
     /// </summary>
     public partial class MainWindow : MicaWindow
     {
-    
-        double currentVersion = 2.0;
-        
+        //发行说明：
+        //①此处升级一下版本号
+        //②Github release新建一个新版本Tag
+        //③上传压缩包删除Settings.json以及uidList.txt
+        double currentVersion = 3.0;
+
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
         /// com2是根据uid获取相册id，https://weibo.com/ajax/profile/getImageWall?uid=10000000000&sinceid=0&has_album=true；根据相册id和sinceid获取图片列表，https://weibo.com/ajax/profile/getAlbumDetail?containerid=123456789000123456_-_pc_profile_album_-_photo_-_camera_-_0_-_%25E5%258E%259F%25E5%2588%259B&since_id=0
         /// cn是从 https://weibo.cn/10000000000/profile?page=2获取html解析发布的微博
+        /// m.cn是移动端api，可以从 https://m.weibo.cn/api/container/getIndex?type=uid&value=10000000000&containerid=10760310000000000&since_id=5040866311798795，since_id第一次为空，containerid以107603开头是获取时间线，100505开头是个人资料
         /// </summary>
         private WeiboDataSource dataSource = WeiboDataSource.WeiboCn;
         private int countPerPage = 100;
@@ -57,7 +61,7 @@ namespace WeiboAlbumDownloader
 
             Directory.CreateDirectory(downloadFolder);
             ComboBox_DataSource.ItemsSource = Enum.GetNames(typeof(WeiboDataSource));
-            ComboBox_DataSource.SelectedIndex = 0;
+            ComboBox_DataSource.SelectedIndex = 1;
             ListView_Messages.ItemsSource = Messages;
 
             //定时任务
@@ -74,16 +78,6 @@ namespace WeiboAlbumDownloader
                     }
                 }, TaskCreationOptions.LongRunning);
             }
-        }
-
-        private async void StartDownLoad(object sender, RoutedEventArgs e)
-        {
-            await Start();
-        }
-
-        private void StopDownLoad(object sender, RoutedEventArgs e)
-        {
-            cancellationTokenSource?.Cancel();
         }
 
         private async Task GetVersion()
@@ -146,11 +140,11 @@ namespace WeiboAlbumDownloader
                                     TextBlock_UID.Text = userId;
                                 });
 
-                                var albums = await HttpHelper.GetAsync<UserAlbumModel>(albumsUrl, dataSource, cookie);
+                                var albums = await HttpHelper.GetAsync<UserAlbumModel>(albumsUrl, dataSource, cookie!);
                                 Directory.CreateDirectory(downloadFolder + userId);
                                 if (albums != null)
                                 {
-                                    foreach (var item in albums?.data?.album_list)
+                                    foreach (var item in albums?.data?.album_list!)
                                     {
                                         if (isSkip)
                                             break;
@@ -169,12 +163,12 @@ namespace WeiboAlbumDownloader
                                                 break;
 
                                             string albumUrl = $"https://photo.weibo.com/photos/get_all?uid={userId}&album_id={item.album_id}&count={countPerPage}&page={page}&type={item.type}";
-                                            var photos = await HttpHelper.GetAsync<AlbumDetailModel>(albumUrl, dataSource, cookie);
+                                            var photos = await HttpHelper.GetAsync<AlbumDetailModel>(albumUrl, dataSource, cookie!);
                                             if (photos != null && photos.data?.photo_list != null && photos.data?.photo_list.Count > 0)
                                             {
                                                 int photoCount = 1;
                                                 string oldCaption = "";
-                                                foreach (var photo in photos.data?.photo_list)
+                                                foreach (var photo in photos.data?.photo_list!)
                                                 {
                                                     if (cancellationTokenSource.IsCancellationRequested)
                                                     {
@@ -212,7 +206,7 @@ namespace WeiboAlbumDownloader
                                                     //传入图片/视频的名字，开始下载图片/视频
                                                     try
                                                     {
-                                                        await HttpHelper.GetAsync<AlbumDetailModel>(photoUrl, dataSource, cookie, fileName);
+                                                        await HttpHelper.GetAsync<AlbumDetailModel>(photoUrl, dataSource, cookie!, fileName);
 
                                                         AppendLog("已完成 " + Path.GetFileName(fileName), MessageEnum.Success);
 
@@ -232,7 +226,7 @@ namespace WeiboAlbumDownloader
                                             }
 
                                             //已存在的文件超过设置值，判定该用户下载过了
-                                            if (settings.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                             {
                                                 AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
                                                 isSkip = true;
@@ -258,11 +252,11 @@ namespace WeiboAlbumDownloader
                                     TextBlock_UID.Text = userId;
                                 });
 
-                                var albums = await HttpHelper.GetAsync<UserAlbumModel2>(albumsUrl, dataSource, cookie);
+                                var albums = await HttpHelper.GetAsync<UserAlbumModel2>(albumsUrl, dataSource, cookie!);
                                 Directory.CreateDirectory(downloadFolder + userId);
                                 if (albums != null)
                                 {
-                                    foreach (var item in albums?.Data?.AlbumList)
+                                    foreach (var item in albums?.Data?.AlbumList!)
                                     {
                                         if (isSkip)
                                             break;
@@ -281,11 +275,11 @@ namespace WeiboAlbumDownloader
                                                 break;
 
                                             string albumUrl = $"https://weibo.com/ajax/profile/getAlbumDetail?containerid={item.Containerid}&since_id={sinceId}";
-                                            var photos = await HttpHelper.GetAsync<AlbumDetailModel2>(albumUrl, dataSource, cookie);
+                                            var photos = await HttpHelper.GetAsync<AlbumDetailModel2>(albumUrl, dataSource, cookie!);
                                             if (photos != null && photos.PhotoListData2?.PhotoListItem2 != null && photos.PhotoListData2?.PhotoListItem2.Count > 0)
                                             {
                                                 sinceId = photos.PhotoListData2.SinceId;
-                                                foreach (var photo in photos.PhotoListData2?.PhotoListItem2)
+                                                foreach (var photo in photos.PhotoListData2?.PhotoListItem2!)
                                                 {
                                                     if (cancellationTokenSource.IsCancellationRequested)
                                                     {
@@ -308,7 +302,7 @@ namespace WeiboAlbumDownloader
                                                     //传入图片/视频的名字，开始下载图片/视频
                                                     try
                                                     {
-                                                        await HttpHelper.GetAsync<AlbumDetailModel>(photoUrl, dataSource, cookie, fileName);
+                                                        await HttpHelper.GetAsync<AlbumDetailModel>(photoUrl, dataSource, cookie!, fileName);
 
                                                         AppendLog("已完成 " + Path.GetFileName(fileName), MessageEnum.Success);
                                                     }
@@ -324,7 +318,7 @@ namespace WeiboAlbumDownloader
                                             }
 
                                             //已存在的文件超过设置值，判定该用户下载过了
-                                            if (settings.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                             {
                                                 AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
                                                 isSkip = true;
@@ -357,7 +351,7 @@ namespace WeiboAlbumDownloader
                                     //https://weibo.cn/xxxxxxxxxxxxx?page=2
                                     //https://weibo.cn/xxxxxxxxxxxxx/profile?page=2
                                     string url = $"https://weibo.cn/{userId}?page={page}&filter=1";
-                                    string text = await HttpHelper.GetAsync<string>(url, dataSource, cookie);
+                                    string text = await HttpHelper.GetAsync<string>(url, dataSource, cookie!);
                                     var doc = new HtmlDocument();
                                     doc.LoadHtml(text);
 
@@ -389,14 +383,14 @@ namespace WeiboAlbumDownloader
                                         using (File.Create(downloadFolder + userId + "//" + nickName)) { }
 
                                         var desc = docUser.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "tip2").ToList()?[0].InnerText.Split("&nbsp;");
-                                        string weiboDesc = string.Join(" ", desc);
+                                        string weiboDesc = string.Join(" ", desc!);
 
                                         headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(temp).Split("?")[0];
                                         var fileName = downloadFolder + userId + "//" + Path.GetFileName(headUrl);
                                         //下载头像
                                         if (!File.Exists(fileName))
                                         {
-                                            await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie, fileName);
+                                            await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
                                         }
 
                                         Image_Head?.Dispatcher.InvokeAsync(() =>
@@ -411,7 +405,7 @@ namespace WeiboAlbumDownloader
                                             Image_Head.ImageSource = bi;
 
                                             //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
-                                            TextBlock_UID.Text = userId;
+                                            TextBlock_UID!.Text = userId;
                                             TextBlock_NickName.Text = nickName;
                                             TextBlock_WeiboDesc.Text = weiboDesc;
                                         });
@@ -497,7 +491,7 @@ namespace WeiboAlbumDownloader
                                         List<string> originalPics = new List<string>();
                                         if (picType == PicEnum.Pictures)
                                         {
-                                            text = await HttpHelper.GetAsync<string>(photoListUrl, dataSource, cookie);
+                                            text = await HttpHelper.GetAsync<string>(photoListUrl, dataSource, cookie!);
                                             var doc2 = new HtmlDocument();
                                             doc2.LoadHtml(text);
                                             list = doc2.DocumentNode.Descendants("img").ToList().ToList();
@@ -523,10 +517,10 @@ namespace WeiboAlbumDownloader
                                         {
                                             try
                                             {
-                                                var res = await HttpHelper.GetAsync<VideoDetailModel>(videoUrl, dataSource, cookie);
+                                                var res = await HttpHelper.GetAsync<VideoDetailModel>(videoUrl, dataSource, cookie!);
                                                 if (res != null && res.ok == 1)
                                                 {
-                                                    originalPics.Add(res?.data?.@object?.stream?.hd_url);
+                                                    originalPics.Add(res?.data?.@object?.stream?.hd_url!);
                                                 }
                                             }
                                             catch
@@ -558,7 +552,7 @@ namespace WeiboAlbumDownloader
                                             Debug.WriteLine(fileName);
 
                                             //已存在的文件超过设置值，判定该用户下载过了
-                                            if (settings.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                             {
                                                 AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
                                                 isSkip = true;
@@ -576,7 +570,7 @@ namespace WeiboAlbumDownloader
                                             //传入图片/视频的名字，开始下载图片/视频
                                             try
                                             {
-                                                await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie, fileName);
+                                                await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileName);
 
                                                 //修改文件日期时间为发博的时间
                                                 File.SetCreationTime(fileName, timestamp);
@@ -606,10 +600,293 @@ namespace WeiboAlbumDownloader
                                     await Task.Delay(rnd);
                                 }
                             }
+                            //通过m.weibo.cn移动端api获取
+                            else if (dataSource == WeiboDataSource.WeiboCnMobile)
+                            {
+                                //https://m.weibo.cn/api/container/getIndex?type=uid&value=10000000000&containerid=10760310000000000&since_id=5040866311798795
+                                long sinceId = 0;
+                                bool cachedUserInfo = false;
+                                string personalFolder = userId;
+
+                                while (true)
+                                {
+                                    if (isSkip)
+                                        break;
+
+                                    string url = $"https://m.weibo.cn/api/container/getIndex?type=uid&value={userId}&containerid=107603{userId}&since_id={sinceId}";
+                                    var res = await HttpHelper.GetAsync<WeiboCnMobileModel>(url, dataSource, cookie!);
+                                    if (res != null && res?.Ok == 1 && res?.Data != null && res?.Data?.Cards != null && res?.Data?.Cards?.Count > 0)
+                                    {
+                                        sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
+                                        AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据", MessageEnum.Info);
+
+
+                                        //获取用户资料
+                                        if (!cachedUserInfo)
+                                        {
+                                            nickName = res?.Data?.Cards?[0]?.Mblog?.User?.ScreenName!;
+                                            personalFolder = $"{nickName}({userId})";
+                                            Directory.CreateDirectory(downloadFolder + "//" + personalFolder);
+                                            using (File.Create(downloadFolder + "//" + personalFolder + "//" + nickName)) { }
+
+                                            headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(res?.Data?.Cards?[0]?.Mblog?.User?.AvatarHd!).Split("?")[0];
+                                            var fileName = downloadFolder + "//" + personalFolder + "//" + Path.GetFileName(headUrl);
+                                            //下载头像
+                                            if (!File.Exists(fileName))
+                                            {
+                                                await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
+                                            }
+
+                                            Image_Head?.Dispatcher.InvokeAsync(() =>
+                                            {
+                                                var bytes = File.ReadAllBytes(fileName);
+                                                MemoryStream ms = new MemoryStream(bytes);
+                                                BitmapImage bi = new BitmapImage();
+                                                bi.BeginInit();
+                                                bi.StreamSource = ms;
+                                                bi.EndInit();
+
+                                                Image_Head.ImageSource = bi;
+
+                                                //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
+                                                TextBlock_UID!.Text = userId;
+                                                TextBlock_NickName.Text = nickName;
+                                                TextBlock_WeiboDesc.Text = res?.Data?.Cards?[0]?.Mblog?.User?.Description!;
+                                            });
+
+                                            cachedUserInfo = true;
+                                        }
+
+                                        //获取图片列表中的每一个图片的原图超链接url
+                                        List<string> originalPics = new List<string>();
+                                        List<string> originalVideos = new List<string>();
+                                        List<string> originalLivePhotos = new List<string>();
+                                        string weiboContent = "";
+                                        DateTime timestamp = DateTime.Now;
+
+                                        foreach (var card in res?.Data?.Cards!)
+                                        {
+                                            if (isSkip)
+                                                break;
+                                            //9是微博，RetweetedStatus是转发
+                                            if (card?.CardType != 9 || card?.Mblog?.RetweetedStatus != null)
+                                                continue;
+
+                                            if (cancellationTokenSource.IsCancellationRequested)
+                                            {
+                                                AppendLog("用户手动终止。", MessageEnum.Info);
+                                                return;
+                                            }
+                                            originalPics.Clear();
+                                            originalVideos.Clear();
+                                            originalLivePhotos.Clear();
+                                            weiboContent = card?.Mblog?.Text!;
+                                            string format = "ddd MMM dd HH:mm:ss K yyyy"; // 定义日期格式
+
+                                            timestamp = DateTime.ParseExact(card?.Mblog?.CreatedAt!, format, System.Globalization.CultureInfo.InvariantCulture);
+
+                                            if (card?.Mblog?.PicIds != null && (bool)card?.Mblog?.PicIds?.Any()!)
+                                            {
+                                                foreach (var item in card?.Mblog?.PicIds!)
+                                                {
+                                                    var photoUrl = "https://wx4.sinaimg.cn/large/" + Path.GetFileName(item) + ".jpg";
+                                                    originalPics.Add(photoUrl);
+                                                }
+                                            }
+                                            if (card?.Mblog?.LivePhoto != null && (bool)(card?.Mblog?.LivePhoto?.Any()!))
+                                            {
+                                                foreach (var item in card?.Mblog?.LivePhoto!)
+                                                {
+                                                    originalLivePhotos.Add(item);
+                                                }
+                                            }
+                                            //选最高清晰度
+                                            if (card?.Mblog?.PageInfo?.Urls?.Mp48kMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp48kMp4!);
+                                            }
+                                            else if (card?.Mblog?.PageInfo?.Urls?.Mp44kMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp44kMp4!);
+                                            }
+                                            else if (card?.Mblog?.PageInfo?.Urls?.Mp42kMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp42kMp4!);
+                                            }
+                                            else if (card?.Mblog?.PageInfo?.Urls?.Mp41080pMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp41080pMp4!);
+                                            }
+                                            else if (card?.Mblog?.PageInfo?.Urls?.Mp4720pMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp4720pMp4!);
+                                            }
+                                            else if (card?.Mblog?.PageInfo?.Urls?.Mp4HDMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp4HDMp4!);
+                                            }
+                                            else if (card?.Mblog?.PageInfo?.Urls?.Mp4LDMp4 != null)
+                                            {
+                                                originalVideos.Add(card?.Mblog?.PageInfo?.Urls?.Mp4LDMp4!);
+                                            }
+
+                                            //替换非法字符
+                                            var invalidChar = Path.GetInvalidFileNameChars();
+                                            var newCaption = invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
+                                            var fileName = downloadFolder + "//" + personalFolder + "//" + "//"
+                                                + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption;
+                                            if (fileName.Length > 240)
+                                                fileName = HttpHelper.GetUniqueFileName(fileName.Substring(0, 240) + Path.GetExtension(fileName));
+                                            Debug.WriteLine(fileName);
+
+                                            //下载获取图片列表中的图片原图
+                                            foreach (var item in originalPics)
+                                            {
+                                                if (isSkip)
+                                                    break;
+
+                                                if (string.IsNullOrEmpty(item))
+                                                    continue;
+                                                var fileNamee = fileName + ".jpg";
+                                                fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, fileNamee.Length - 4) + Path.GetExtension(fileNamee));
+                                                if (fileNamee.Length > 240)
+                                                    fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, 240) + Path.GetExtension(fileNamee));
+                                                //已存在的文件超过设置值，判定该用户下载过了
+                                                if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                                {
+                                                    AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                    isSkip = true;
+                                                }
+
+                                                //已经下载过的跳过
+                                                if (File.Exists(fileNamee))
+                                                {
+                                                    AppendLog("文件已存在，跳过下载" + fileNamee, MessageEnum.Warning);
+                                                    countDownloadedSkipToNextUser++;
+                                                    await Task.Delay(500);
+                                                    continue;
+                                                }
+
+                                                //传入图片/视频的名字，开始下载图片/视频
+                                                try
+                                                {
+                                                    await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
+
+                                                    //修改文件日期时间为发博的时间
+                                                    File.SetCreationTime(fileNamee, timestamp);
+                                                    File.SetLastWriteTime(fileNamee, timestamp);
+                                                    File.SetLastAccessTime(fileNamee, timestamp);
+
+                                                    AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
+                                                }
+                                            }
+                                            foreach (var item in originalVideos)
+                                            {
+                                                if (isSkip)
+                                                    break;
+
+                                                if (string.IsNullOrEmpty(item))
+                                                    continue;
+                                                var fileNamee = fileName + ".mp4";
+                                                fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, fileNamee.Length - 4) + Path.GetExtension(fileNamee));
+                                                if (fileNamee.Length > 240)
+                                                    fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, 240) + Path.GetExtension(fileNamee));
+                                                //已存在的文件超过设置值，判定该用户下载过了
+                                                if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                                {
+                                                    AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                    isSkip = true;
+                                                }
+
+                                                //已经下载过的跳过
+                                                if (File.Exists(fileNamee))
+                                                {
+                                                    AppendLog("文件已存在，跳过下载" + fileNamee, MessageEnum.Warning);
+                                                    countDownloadedSkipToNextUser++;
+                                                    await Task.Delay(500);
+                                                    continue;
+                                                }
+
+                                                //传入图片/视频的名字，开始下载图片/视频
+                                                try
+                                                {
+                                                    await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
+
+                                                    //修改文件日期时间为发博的时间
+                                                    File.SetCreationTime(fileNamee, timestamp);
+                                                    File.SetLastWriteTime(fileNamee, timestamp);
+                                                    File.SetLastAccessTime(fileNamee, timestamp);
+
+                                                    AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
+                                                }
+                                            }
+                                            foreach (var item in originalLivePhotos)
+                                            {
+                                                if (isSkip)
+                                                    break;
+
+                                                if (string.IsNullOrEmpty(item))
+                                                    continue;
+                                                var fileNamee = fileName + ".mov";
+                                                fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, fileNamee.Length - 4) + Path.GetExtension(fileNamee));
+                                                if (fileNamee.Length > 240)
+                                                    fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, 240) + Path.GetExtension(fileNamee));
+                                                //已存在的文件超过设置值，判定该用户下载过了
+                                                if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                                {
+                                                    AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                    isSkip = true;
+                                                }
+
+                                                //已经下载过的跳过
+                                                if (File.Exists(fileNamee))
+                                                {
+                                                    AppendLog("文件已存在，跳过下载" + fileNamee, MessageEnum.Warning);
+                                                    countDownloadedSkipToNextUser++;
+                                                    await Task.Delay(500);
+                                                    continue;
+                                                }
+
+                                                //传入图片/视频的名字，开始下载图片/视频
+                                                try
+                                                {
+                                                    await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
+
+                                                    //修改文件日期时间为发博的时间
+                                                    File.SetCreationTime(fileNamee, timestamp);
+                                                    File.SetLastWriteTime(fileNamee, timestamp);
+                                                    File.SetLastAccessTime(fileNamee, timestamp);
+
+                                                    AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+                                //通过加入随机等待避免被限制。爬虫速度过快容易被系统限制(一段时间后限制会自动解除)，加入随机等待模拟人的操作，可降低被系统限制的风险。默认是每爬取1到5页随机等待6到10秒，如果仍然被限，可适当增加sleep时间
+                                Random rd = new Random();
+                                int rnd = rd.Next(5000, 10000);
+                                AppendLog($"随机等待{rnd}ms，避免爬虫速度过快被系统限制", MessageEnum.Info);
+                                await Task.Delay(rnd);
+                            }
+
 
                             //单个用户结束下载
                             string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
-                            await PushPlusHelper.SendMessage(settings?.PushPlusToken, "微博相册下载", info);
+                            await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
                             AppendLog(info, MessageEnum.Info);
                         }
                     }
@@ -640,14 +917,9 @@ namespace WeiboAlbumDownloader
             });
         }
 
-        //private void ToggleSwitch_Source_Click(object sender, RoutedEventArgs e)
-        //{
-        //    ToggleSwitch_Source.Content = ToggleSwitch_Source.Content.ToString() == "weibo.com" ? "weibo.cn" : "weibo.com";
-        //    isFromWeiboCom = ToggleSwitch_Source.Content.ToString() == "weibo.com";
-        //}
-
         private void InitData()
         {
+            //配置文件不存在就创建
             if (!File.Exists("uidList.txt"))
             {
                 using (File.Create("uidList.txt")) { }
@@ -714,6 +986,17 @@ namespace WeiboAlbumDownloader
             }
         }
 
+        #region UI操作
+        private async void StartDownLoad(object sender, RoutedEventArgs e)
+        {
+            await Start();
+        }
+
+        private void StopDownLoad(object sender, RoutedEventArgs e)
+        {
+            cancellationTokenSource?.Cancel();
+        }
+
         private void OpenDir(object sender, RoutedEventArgs e)
         {
             Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
@@ -738,9 +1021,13 @@ namespace WeiboAlbumDownloader
             }
             else if (ComboBox_DataSource.SelectedIndex == 1)
             {
-                AppendLog("通过weibo.com获取的是相册信息，可以获取原创微博相册、头像相册、自拍相册等。少数用户存在获取失败的问题，怀疑是微博内部api不统一造成的。", MessageEnum.Info);
+                AppendLog("通过m.weibo.cn获取的是用户的时间流，推荐使用。", MessageEnum.Info);
             }
             else if (ComboBox_DataSource.SelectedIndex == 2)
+            {
+                AppendLog("通过weibo.com获取的是相册信息，可以获取原创微博相册、头像相册、自拍相册等。少数用户存在获取失败的问题，怀疑是微博内部api不统一造成的。", MessageEnum.Info);
+            }
+            else if (ComboBox_DataSource.SelectedIndex == 3)
             {
                 AppendLog("通过weibo.com获取的是用户的ajax相册，可以获取原创微博相册、头像相册、自拍相册等。但是获取不到博文信息，所以无法重命名图片和修改图片日期。貌似还获取不全。不推荐使用！！！", MessageEnum.Info);
             }
@@ -751,18 +1038,28 @@ namespace WeiboAlbumDownloader
             Border_Head.Width = Border_Head.Height = Column_LeftGrid.ActualWidth * 0.8;
             Border_Head.CornerRadius = new CornerRadius(Column_LeftGrid.ActualWidth * 0.8);
         }
+        #endregion
 
+        /// <summary>
+        /// 通过Selenium获取Cookie
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GetCookie(object sender, RoutedEventArgs e)
         {
             string loginUrl = "https://passport.weibo.com/sso/signin?entry=wapsso&source=wapssowb&url=https://weibo.cn";
-            if (ComboBox_DataSource.SelectedIndex != 0)
+            if (ComboBox_DataSource.SelectedIndex == 1)
+            {
+                loginUrl = "https://passport.weibo.com/sso/signin?entry=wapsso&source=wapsso&url=https://m.weibo.cn";
+            }
+            else if (ComboBox_DataSource.SelectedIndex == 2 || ComboBox_DataSource.SelectedIndex == 3)
             {
                 loginUrl = "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&url=https://weibo.com/";
             }
 
             IWebDriver driver = new ChromeDriver();
             driver.Url = loginUrl;
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(60))
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromHours(8))
             {
                 PollingInterval = TimeSpan.FromMilliseconds(500),
             };
@@ -770,11 +1067,11 @@ namespace WeiboAlbumDownloader
             //wait.Until(d => d.FindElement(By.LinkText("title")));
 
             // 等待页面加载完成并获取页面标题
-            wait.Until(d => d.Title.Equals("微博 – 随时随地发现新鲜事") || d.Title.Equals("我的首页"));
+            wait.Until(d => d.Title.Equals("微博 – 随时随地发现新鲜事") || d.Title.Equals("我的首页") || d.Title.Equals("微博"));
 
             // 获取页面标题并进行检查
             string pageTitle = driver.Title;
-            if (pageTitle.Equals("微博 – 随时随地发现新鲜事") || pageTitle.Equals("我的首页"))
+            if (pageTitle.Equals("微博 – 随时随地发现新鲜事") || pageTitle.Equals("我的首页") || pageTitle.Equals("微博"))
             {
                 AppendLog("扫码登陆成功", MessageEnum.Success);
                 // 获取所有的 Cookie 对象

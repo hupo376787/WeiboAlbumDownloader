@@ -51,7 +51,7 @@ PC打开[weibo.com](https://weibo.com/)，点击某一用户头像，进入主�
 
 
 
-按F12进入控制台，网络-全部，在名称栏选择uid，标头-请求标头-Cookie。右键复制后请填入到Seetings.json。
+Cookie可以通过点击上方按钮打开页面扫码获取，或者按F12进入控制台，网络-全部，在名称栏选择uid，标头-请求标头-Cookie。右键复制后请填入到Seetings.json。
 
 
 

@@ -51,6 +51,7 @@ namespace WeiboAlbumDownloader.Helpers
                 {
                     var stream = lxResponse.GetResponseStream();
                     StreamReader reader = new StreamReader(stream);
+
                     if (!string.IsNullOrEmpty(fileName))
                     {
                         FileStream lxFS = File.Create(fileName);
@@ -72,6 +73,29 @@ namespace WeiboAlbumDownloader.Helpers
             {
                 throw;
             }
+        }
+
+        public static string GetUniqueFileName(string filePath)
+        {
+            // 获取文件目录和扩展名
+            string directory = Path.GetDirectoryName(filePath)!;
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+            string extension = Path.GetExtension(filePath);
+
+            int count = 1;
+
+            // 初始文件路径
+            string uniqueFilePath = filePath;
+
+            // 检查文件是否存在，如果存在则循环添加编号直到找到一个不存在的文件名
+            while (File.Exists(uniqueFilePath))
+            {
+                string newFileName = $"{fileNameWithoutExtension}({count}){extension}";
+                uniqueFilePath = Path.Combine(directory, newFileName);
+                count++;
+            }
+
+            return uniqueFilePath;
         }
     }
 }
