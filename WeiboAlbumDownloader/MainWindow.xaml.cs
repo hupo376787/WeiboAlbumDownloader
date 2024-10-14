@@ -15,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using TimeCrontab;
 using WeiboAlbumDownloader.Enums;
@@ -892,7 +891,7 @@ namespace WeiboAlbumDownloader
 
 
                             //单个用户结束下载
-                            string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
+                            string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
                             SentrySdk.CaptureMessage(info);
 
