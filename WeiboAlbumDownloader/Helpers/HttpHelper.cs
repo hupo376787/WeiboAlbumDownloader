@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
@@ -54,7 +55,15 @@ namespace WeiboAlbumDownloader.Helpers
 
                     if (!string.IsNullOrEmpty(fileName))
                     {
-                        FileStream lxFS = File.Create(fileName);
+                        var invalidChar = Path.GetInvalidFileNameChars();
+                        var newFileName = invalidChar.Aggregate(Path.GetFileName(fileName), (o, r) => (o.Replace(r.ToString(), string.Empty)));
+
+                        if (newFileName.Length > 240)
+                            newFileName = GetUniqueFileName(newFileName.Substring(0, 240) + Path.GetExtension(newFileName));
+                        else
+                            newFileName = GetUniqueFileName(fileName);
+
+                        FileStream lxFS = File.Create(newFileName);
                         await stream.CopyToAsync(lxFS);
                         lxFS.Close();
                         lxFS.Dispose();

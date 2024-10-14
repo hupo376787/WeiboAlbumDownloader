@@ -33,7 +33,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下版本号
         //②Github release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        double currentVersion = 3.1;
+        double currentVersion = 3.2;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -745,6 +745,7 @@ namespace WeiboAlbumDownloader
                                                 + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption;
                                             Debug.WriteLine(fileName);
 
+                                            int id = 1;
                                             //下载获取图片列表中的图片原图
                                             foreach (var item in originalPics)
                                             {
@@ -753,7 +754,7 @@ namespace WeiboAlbumDownloader
 
                                                 if (string.IsNullOrEmpty(item))
                                                     continue;
-                                                var fileNamee = fileName + ".jpg";
+                                                var fileNamee = fileName + $"_{id}.jpg";
                                                 //已存在的文件超过设置值，判定该用户下载过了
                                                 if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                                 {
@@ -786,6 +787,7 @@ namespace WeiboAlbumDownloader
                                                 {
                                                     AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
                                                 }
+                                                id++;
                                             }
                                             foreach (var item in originalVideos)
                                             {
@@ -794,7 +796,7 @@ namespace WeiboAlbumDownloader
 
                                                 if (string.IsNullOrEmpty(item))
                                                     continue;
-                                                var fileNamee = fileName + ".mp4";
+                                                var fileNamee = fileName + $"_{id}.mp4";
                                                 //已存在的文件超过设置值，判定该用户下载过了
                                                 if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                                 {
@@ -827,6 +829,7 @@ namespace WeiboAlbumDownloader
                                                 {
                                                     AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
                                                 }
+                                                id++;
                                             }
                                             foreach (var item in originalLivePhotos)
                                             {
@@ -835,7 +838,7 @@ namespace WeiboAlbumDownloader
 
                                                 if (string.IsNullOrEmpty(item))
                                                     continue;
-                                                var fileNamee = fileName + ".mov";
+                                                var fileNamee = fileName + $"_{id}.mov";
                                                 //已存在的文件超过设置值，判定该用户下载过了
                                                 if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                                 {
@@ -868,6 +871,7 @@ namespace WeiboAlbumDownloader
                                                 {
                                                     AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
                                                 }
+                                                id++;
                                             }
                                         }
 
