@@ -1,24 +1,26 @@
 ﻿using HtmlAgilityPack;
 using MicaWPF.Controls;
 using Newtonsoft.Json;
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium;
+using Sentry;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using TimeCrontab;
 using WeiboAlbumDownloader.Enums;
 using WeiboAlbumDownloader.Helpers;
 using WeiboAlbumDownloader.Models;
-using System.Windows.Controls;
 
 namespace WeiboAlbumDownloader
 {
@@ -31,7 +33,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下版本号
         //②Github release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        double currentVersion = 3.0;
+        double currentVersion = 3.1;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -82,7 +84,7 @@ namespace WeiboAlbumDownloader
 
         private async Task GetVersion()
         {
-            AppendLog($"当前程序版本V{currentVersion}");
+            AppendLog($"当前程序版本 V{currentVersion}");
 
             var latestVersionString = await GithubHelper.GetLatestVersion();
             if (string.IsNullOrEmpty(latestVersionString))
@@ -607,6 +609,7 @@ namespace WeiboAlbumDownloader
                                 long sinceId = 0;
                                 bool cachedUserInfo = false;
                                 string personalFolder = userId;
+                                int page = 1;
 
                                 while (true)
                                 {
@@ -618,8 +621,7 @@ namespace WeiboAlbumDownloader
                                     if (res != null && res?.Ok == 1 && res?.Data != null && res?.Data?.Cards != null && res?.Data?.Cards?.Count > 0)
                                     {
                                         sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
-                                        AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据", MessageEnum.Info);
-
+                                        AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页", MessageEnum.Info);
 
                                         //获取用户资料
                                         if (!cachedUserInfo)
@@ -680,7 +682,13 @@ namespace WeiboAlbumDownloader
                                             originalPics.Clear();
                                             originalVideos.Clear();
                                             originalLivePhotos.Clear();
-                                            weiboContent = card?.Mblog?.Text!;
+                                            //weiboContent = card?.Mblog?.Text!;
+                                            // 使用正则表达式去除 <a> 和 <span> 标签及其内容
+                                            string result = Regex.Replace(card?.Mblog?.Text!, @"<a.*?>.*?</a>|<span.*?>.*?</span>", string.Empty);
+                                            // 去除其他不需要的标签（如 <br />）
+                                            weiboContent = Regex.Replace(result, @"<.*?>", string.Empty);
+
+
                                             string format = "ddd MMM dd HH:mm:ss K yyyy"; // 定义日期格式
 
                                             timestamp = DateTime.ParseExact(card?.Mblog?.CreatedAt!, format, System.Globalization.CultureInfo.InvariantCulture);
@@ -735,8 +743,6 @@ namespace WeiboAlbumDownloader
                                             var newCaption = invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
                                             var fileName = downloadFolder + "//" + personalFolder + "//" + "//"
                                                 + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption;
-                                            if (fileName.Length > 240)
-                                                fileName = HttpHelper.GetUniqueFileName(fileName.Substring(0, 240) + Path.GetExtension(fileName));
                                             Debug.WriteLine(fileName);
 
                                             //下载获取图片列表中的图片原图
@@ -748,9 +754,6 @@ namespace WeiboAlbumDownloader
                                                 if (string.IsNullOrEmpty(item))
                                                     continue;
                                                 var fileNamee = fileName + ".jpg";
-                                                fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, fileNamee.Length - 4) + Path.GetExtension(fileNamee));
-                                                if (fileNamee.Length > 240)
-                                                    fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, 240) + Path.GetExtension(fileNamee));
                                                 //已存在的文件超过设置值，判定该用户下载过了
                                                 if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                                 {
@@ -792,9 +795,6 @@ namespace WeiboAlbumDownloader
                                                 if (string.IsNullOrEmpty(item))
                                                     continue;
                                                 var fileNamee = fileName + ".mp4";
-                                                fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, fileNamee.Length - 4) + Path.GetExtension(fileNamee));
-                                                if (fileNamee.Length > 240)
-                                                    fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, 240) + Path.GetExtension(fileNamee));
                                                 //已存在的文件超过设置值，判定该用户下载过了
                                                 if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                                 {
@@ -836,9 +836,6 @@ namespace WeiboAlbumDownloader
                                                 if (string.IsNullOrEmpty(item))
                                                     continue;
                                                 var fileNamee = fileName + ".mov";
-                                                fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, fileNamee.Length - 4) + Path.GetExtension(fileNamee));
-                                                if (fileNamee.Length > 240)
-                                                    fileNamee = HttpHelper.GetUniqueFileName(fileNamee.Substring(0, 240) + Path.GetExtension(fileNamee));
                                                 //已存在的文件超过设置值，判定该用户下载过了
                                                 if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
                                                 {
@@ -874,19 +871,27 @@ namespace WeiboAlbumDownloader
                                             }
                                         }
 
+                                        page++;
                                     }
+                                    else
+                                    {
+                                        break;
+                                    }
+
+                                    //通过加入随机等待避免被限制。爬虫速度过快容易被系统限制(一段时间后限制会自动解除)，加入随机等待模拟人的操作，可降低被系统限制的风险。默认是每爬取1到5页随机等待6到10秒，如果仍然被限，可适当增加sleep时间
+                                    Random rd = new Random();
+                                    int rnd = rd.Next(5000, 10000);
+                                    AppendLog($"随机等待{rnd}ms，避免爬虫速度过快被系统限制", MessageEnum.Info);
+                                    await Task.Delay(rnd);
                                 }
-                                //通过加入随机等待避免被限制。爬虫速度过快容易被系统限制(一段时间后限制会自动解除)，加入随机等待模拟人的操作，可降低被系统限制的风险。默认是每爬取1到5页随机等待6到10秒，如果仍然被限，可适当增加sleep时间
-                                Random rd = new Random();
-                                int rnd = rd.Next(5000, 10000);
-                                AppendLog($"随机等待{rnd}ms，避免爬虫速度过快被系统限制", MessageEnum.Info);
-                                await Task.Delay(rnd);
                             }
 
 
                             //单个用户结束下载
                             string info = $"<a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
+                            SentrySdk.CaptureMessage(info);
+
                             AppendLog(info, MessageEnum.Info);
                         }
                     }
@@ -922,7 +927,10 @@ namespace WeiboAlbumDownloader
             //配置文件不存在就创建
             if (!File.Exists("uidList.txt"))
             {
-                using (File.Create("uidList.txt")) { }
+                //using (File.Create("uidList.txt"))
+                {
+                    File.WriteAllText("uidList.txt", "//可以是多用户，换行隔开。\r\n//行内用英文逗号隔开，用户id(必填),用户名(可选)\r\n");
+                }
             }
             if (!File.Exists("Settings.json"))
             {

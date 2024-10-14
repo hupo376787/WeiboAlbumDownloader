@@ -360,7 +360,7 @@ namespace WeiboAlbumDownloader.Models
         public string? Size { get; set; }
 
         [JsonProperty("geo")]
-        public PicGeo? Geo { get; set; }
+        public object? Geo { get; set; }
 
         [JsonProperty("large")]
         public Large? Large { get; set; }
