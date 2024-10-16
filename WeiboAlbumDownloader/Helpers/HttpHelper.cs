@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -71,6 +72,8 @@ namespace WeiboAlbumDownloader.Helpers
                     }
 
                     string text = reader.ReadToEnd();
+                    Debug.WriteLine(text);
+
                     Type type = typeof(T);
                     if (type == typeof(string))
                         return (T)Convert.ChangeType(text, typeof(T));
