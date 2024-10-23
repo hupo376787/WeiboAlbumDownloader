@@ -33,7 +33,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下版本号
         //②Github release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        double currentVersion = 3.3;
+        double currentVersion = 3.4;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -116,6 +116,16 @@ namespace WeiboAlbumDownloader
                 cancellationTokenSource?.Cancel();
                 cancellationTokenSource = new CancellationTokenSource();
 
+                if (string.IsNullOrEmpty(userId))
+                {
+                    AppendLog("uid呢？u i d呢？请填写uid再下载。参考上面说明获取uid", MessageEnum.Error);
+                    return;
+                }
+
+                //用于Sentry崩溃收集
+                GlobalVar.gId = userId;
+                GlobalVar.gDataSource = dataSource;
+
                 //读取用户列表和设置
                 InitData();
 
@@ -162,6 +172,8 @@ namespace WeiboAlbumDownloader
                                         if (isSkip)
                                             break;
 
+                                        GlobalVar.gPage = page;
+
                                         string albumUrl = $"https://photo.weibo.com/photos/get_all?uid={userId}&album_id={item.album_id}&count={countPerPage}&page={page}&type={item.type}";
                                         var photos = await HttpHelper.GetAsync<AlbumDetailModel>(albumUrl, dataSource, cookie!);
                                         if (photos != null && photos.data?.photo_list != null && photos.data?.photo_list.Count > 0)
@@ -193,7 +205,7 @@ namespace WeiboAlbumDownloader
                                                 var invalidChar = System.IO.Path.GetInvalidFileNameChars();
                                                 var newCaption = invalidChar.Aggregate(photo.caption_render, (o, r) => (o.Replace(r.ToString(), string.Empty)));
                                                 var fileName = downloadFolder + userId + "//" + item.caption + "//"
-                                                    + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + "-" + photoCount + newCaption + ".jpg";
+                                                    + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption + "_" + photoCount + ".jpg";
                                                 Debug.WriteLine(fileName);
                                                 if (File.Exists(fileName))
                                                 {
@@ -278,7 +290,7 @@ namespace WeiboAlbumDownloader
                                         var photos = await HttpHelper.GetAsync<AlbumDetailModel2>(albumUrl, dataSource, cookie!);
                                         if (photos != null && photos.PhotoListData2?.PhotoListItem2 != null && photos.PhotoListData2?.PhotoListItem2.Count > 0)
                                         {
-                                            sinceId = photos.PhotoListData2.SinceId;
+                                            GlobalVar.gSinceId = sinceId = photos.PhotoListData2.SinceId;
                                             foreach (var photo in photos.PhotoListData2?.PhotoListItem2!)
                                             {
                                                 if (cancellationTokenSource.IsCancellationRequested)
@@ -346,6 +358,8 @@ namespace WeiboAlbumDownloader
                             {
                                 if (isSkip)
                                     break;
+
+                                GlobalVar.gPage = page;
 
                                 //filter，0-全部；1-原创；2-图片
                                 //https://weibo.cn/xxxxxxxxxxxxx?page=2
@@ -543,7 +557,7 @@ namespace WeiboAlbumDownloader
                                         var invalidChar = Path.GetInvalidFileNameChars();
                                         var newCaption = invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
                                         var fileName = downloadFolder + userId + "//" + "微博配图" + "//"
-                                            + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + "-" + photoCount + newCaption;
+                                            + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption + "_" + photoCount;
                                         //后缀名区分图片/视频
                                         if (picType == PicEnum.Video)
                                             fileName += ".mp4";
@@ -618,7 +632,7 @@ namespace WeiboAlbumDownloader
                                 var res = await HttpHelper.GetAsync<WeiboCnMobileModel>(url, dataSource, cookie!);
                                 if (res != null && res?.Ok == 1 && res?.Data != null && res?.Data?.Cards != null && res?.Data?.Cards?.Count > 0)
                                 {
-                                    sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
+                                    GlobalVar.gSinceId = sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
                                     AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页", MessageEnum.Info);
 
                                     //获取用户资料
@@ -890,7 +904,7 @@ namespace WeiboAlbumDownloader
 
 
                         //单个用户结束下载
-                        string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
+                        string info = $"{nickName} <a href=\"//c\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
                         await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
                         SentrySdk.CaptureMessage(info);
 
@@ -905,7 +919,9 @@ namespace WeiboAlbumDownloader
             }
             catch (Exception ex)
             {
-                AppendLog("遇到错误" + ex.ToString() + "，请稍后重试。", MessageEnum.Error);
+                string msg = $"遇到错误，uid: {GlobalVar.gId}，DataSource: {dataSource}，Page:{GlobalVar.gPage}，SinceId: {GlobalVar.gSinceId}，" + ex.ToString() + "，请稍后重试。";
+                AppendLog(msg, MessageEnum.Error);
+                SentrySdk.CaptureMessage(msg, SentryLevel.Error);
             }
         }
 
@@ -1111,6 +1127,12 @@ namespace WeiboAlbumDownloader
 
             // 程序结束时，手动关闭浏览器
             driver.Quit();
+        }
+
+        private async void TextBox_WeiboId_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+                await Start(TextBox_WeiboId.Text.Trim());
         }
     }
 }

@@ -55,6 +55,7 @@
         Width="140"
         Height="32"
         Margin="8,0"
+        KeyUp="TextBox_WeiboId_KeyUp"
         ToolTip="填写uid单用户下载或者uidList.txt进行批量下载"
         Watermark="uid" />
       <mica:Button

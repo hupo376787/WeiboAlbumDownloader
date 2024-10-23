@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -32,10 +33,25 @@ namespace WeiboAlbumDownloader
 
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
+            SentrySdk.AddBreadcrumb(
+                message: $"weibo.com/u/{GlobalVar.gId}，uid: {GlobalVar.gId}，DataSource: {GlobalVar.gDataSource}，Page:{GlobalVar.gPage}，SinceId: {GlobalVar.gSinceId}",
+                category: "error",
+                level: BreadcrumbLevel.Error
+            );
             SentrySdk.CaptureException(e.Exception);
 
             // If you want to avoid the application from crashing:
             e.Handled = true;
         }
+
+        private void OnStartup(object sender, StartupEventArgs e)
+        {
+            SentrySdk.ConfigureScope(scope =>
+            {
+                scope.SetTag("AppName", Assembly.GetExecutingAssembly().GetName().Name!);
+                scope.SetTag("DeviceName", Environment.MachineName);
+            });
+        }
+
     }
 }
