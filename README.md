@@ -80,13 +80,17 @@ Cookie可以通过点击上方按钮打开页面扫码获取，或者按F12进�
 
 4. [HtmlAgilityPack](https://html-agility-pack.net/)，解析网页返回的html数据。
 
-5. [TimeCrontab](https://github.com/MonkSoul/TimeCrontab)，解析crontab时间数据。
+5. [Selenium](https://www.selenium.dev/)，开源的浏览器自动化工具。
 
 6. [CronExpressionDescriptor](https://github.com/bradymholt/cron-expression-descriptor)，翻译crontab数据为可阅读的文本。
 
-7. [Weibo Spider](https://github.com/dataabc/weiboSpider)，一个开源的很牛逼的微博爬虫。
+7. [TimeCrontab](https://github.com/MonkSoul/TimeCrontab)，解析crontab时间数据。
 
-8. [免责声明](https://github.com/JoeanAmier/TikTokDownloader/blob/master/README.md)
+8. [Weibo Spider](https://github.com/dataabc/weiboSpider)，一个开源微博爬虫。
+
+9. 图标来自[FlatIcon](https://www.flaticon.com/)。
+
+10. [免责声明](https://github.com/JoeanAmier/TikTokDownloader/blob/master/README.md)
 
 
 # 是否支持项目个性化定制
