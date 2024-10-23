@@ -13,7 +13,7 @@
 
 # 推荐类似
 
-[银杏下载器(抖音/快手/微博/小红书/推特作者主页作品下载) 抖音解析、快手解析、小红书解析、推特解析]](https://github.com/hupo376787/GinkgoDownloader)
+[银杏下载器(抖音/快手/小红书/推特作者主页作品下载) 抖音解析、快手解析、小红书解析、推特解析]](https://github.com/hupo376787/GinkgoDownloader)
 
 
 
