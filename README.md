@@ -88,6 +88,11 @@ Cookie可以通过点击上方按钮打开页面扫码获取，或者按F12进�
 
 8. [免责声明](https://github.com/JoeanAmier/TikTokDownloader/blob/master/README.md)
 
+
+# 是否支持项目个性化定制
+
+支持，具体需求可以联系作者，或者提issue。
+
    
 
 # 免责声明(Disclaimers)
