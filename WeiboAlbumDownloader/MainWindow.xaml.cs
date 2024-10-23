@@ -1009,7 +1009,16 @@ namespace WeiboAlbumDownloader
         #region UI操作
         private async void StartDownLoad(object sender, RoutedEventArgs e)
         {
-            await Start(TextBox_WeiboId.Text.Trim());
+            if (tbDownload.Text == "开始下载")
+            {
+                tbDownload.Text = "停止下载";
+                await Start(TextBox_WeiboId.Text.Trim());
+            }
+            else
+            {
+                tbDownload.Text = "开始下载";
+                cancellationTokenSource?.Cancel();
+            }
         }
 
         private void StopDownLoad(object sender, RoutedEventArgs e)
@@ -1133,6 +1142,11 @@ namespace WeiboAlbumDownloader
         {
             if (e.Key == System.Windows.Input.Key.Enter)
                 await Start(TextBox_WeiboId.Text.Trim());
+        }
+
+        private void OpenGithub(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/hupo376787/WeiboAlbumDownloader") { UseShellExecute = true });
         }
     }
 }

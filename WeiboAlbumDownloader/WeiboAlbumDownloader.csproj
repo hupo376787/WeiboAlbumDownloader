@@ -10,6 +10,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\cloud-computing.png" />
+    <None Remove="Assets\cookie.png" />
+    <None Remove="Assets\download.png" />
+    <None Remove="Assets\github.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\github.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\cloud-computing.png" />
+    <Resource Include="Assets\cookie.png" />
+    <Resource Include="Assets\download.png" />
     <Resource Include="weibo.ico" />
   </ItemGroup>
 

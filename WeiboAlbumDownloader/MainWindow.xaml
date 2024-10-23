@@ -7,10 +7,10 @@
   xmlns:local="clr-namespace:WeiboAlbumDownloader"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
-  Title="微博相册下载"
+  Title="微博相册/视频/LivePhoto下载"
   Width="1024"
   Height="618"
-  FontFamily="宋体"
+  FontFamily="微软雅黑"
   Icon="/weibo.ico"
   SizeChanged="MicaWindow_SizeChanged"
   SystemBackdropType="Acrylic"
@@ -42,40 +42,75 @@
       <ComboBox
         x:Name="ComboBox_DataSource"
         Margin="8"
-        SelectionChanged="ComboBox_DataSource_SelectionChanged" />
+        SelectionChanged="ComboBox_DataSource_SelectionChanged"
+        ToolTip="不懂的话选择默认即可" />
       <mica:Button
         Width="160"
         Height="32"
         Margin="8,0"
         Background="LightYellow"
         Click="GetCookie"
-        Content="扫码获取Cookie" />
+        ToolTip="打开手机版微博，扫描二维码确认登陆">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="18" Source="/Assets/cookie.png" />
+          <TextBlock
+            Margin="8,0,0,0"
+            VerticalAlignment="Center"
+            Text="扫码获取Cookie" />
+        </StackPanel>
+      </mica:Button>
       <mica:TextBox
         x:Name="TextBox_WeiboId"
         Width="140"
         Height="32"
         Margin="8,0"
         KeyUp="TextBox_WeiboId_KeyUp"
-        ToolTip="填写uid单用户下载或者uidList.txt进行批量下载"
+        ToolTip="填写uid进行单用户下载或者uidList.txt进行批量下载"
         Watermark="uid" />
       <mica:Button
         Width="160"
         Height="32"
         Margin="8,0"
         Click="StartDownLoad"
-        Content="开始下载" />
-      <mica:Button
+        ToolTip="开始/停止下载，停止下载的时候可能有延后，因为需要等待分页任务下载完才能停">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="18" Source="/Assets/cloud-computing.png" />
+          <TextBlock
+            x:Name="tbDownload"
+            Margin="8,0,0,0"
+            VerticalAlignment="Center"
+            Text="开始下载" />
+        </StackPanel>
+      </mica:Button>
+      <!--<mica:Button
         Width="140"
         Height="32"
         Margin="8,0"
         Click="StopDownLoad"
-        Content="停止下载" />
+        Content="停止下载" />-->
       <mica:Button
         Width="140"
         Height="32"
         Margin="8,0"
-        Click="OpenDir"
-        Content="打开下载目录" />
+        Click="OpenDir">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="18" Source="/Assets/download.png" />
+          <TextBlock
+            Margin="8,0,0,0"
+            VerticalAlignment="Center"
+            Text="打开下载目录" />
+        </StackPanel>
+      </mica:Button>
+      <mica:Button
+        Width="64"
+        Height="32"
+        Margin="8,0"
+        Click="OpenGithub"
+        ToolTip="Fork me on Github">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="24" Source="/Assets/github.png" />
+        </StackPanel>
+      </mica:Button>
     </StackPanel>
 
     <TextBlock
@@ -118,7 +153,7 @@
           BorderThickness="0"
           FontSize="22"
           FontWeight="Bold"
-          Foreground="#FFBF00" />
+          Foreground="Gray" />
         <TextBox
           x:Name="TextBlock_NickName"
           Width="256"
@@ -128,15 +163,15 @@
           d:Text="昵称"
           Background="Transparent"
           BorderThickness="0"
-          FontSize="36"
+          FontSize="32"
           FontWeight="Bold"
-          Foreground="#FFBF00" />
+          Foreground="Gray" />
         <TextBlock
           x:Name="TextBlock_WeiboDesc"
           HorizontalAlignment="Center"
           d:Text="微博[888] 关注[274] 粉丝[7.9万] 分组[1]"
           FontSize="16"
-          Foreground="#EBB000" />
+          Foreground="Gray" />
       </StackPanel>
       <ListView
         x:Name="ListView_Messages"
