@@ -182,6 +182,8 @@
         <ListView.ContextMenu>
           <ContextMenu>
             <MenuItem Click="ListView_CopyLog" Header="复制" />
+            <MenuItem Click="ListView_ClearLog" Header="清空" />
+            <MenuItem Click="ListView_ExportLog" Header="导出" />
           </ContextMenu>
         </ListView.ContextMenu>
         <ListView.ItemTemplate>

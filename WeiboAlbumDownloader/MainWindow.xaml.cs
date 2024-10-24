@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下版本号
         //②Github release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        double currentVersion = 3.4;
+        double currentVersion = 3.5;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -923,6 +924,10 @@ namespace WeiboAlbumDownloader
                 AppendLog(msg, MessageEnum.Error);
                 SentrySdk.CaptureMessage(msg, SentryLevel.Error);
             }
+            finally
+            {
+                tbDownload.Text = "开始下载";
+            }
         }
 
         private void AppendLog(string text, MessageEnum messageEnum = MessageEnum.Info)
@@ -1038,7 +1043,46 @@ namespace WeiboAlbumDownloader
 
         private void ListView_CopyLog(object sender, RoutedEventArgs e)
         {
-            Clipboard.SetText((ListView_Messages.SelectedItem as MessageModel)!.Message);
+            if(ListView_Messages.SelectedItem != null)
+                Clipboard.SetText((ListView_Messages.SelectedItem! as MessageModel)!.Message);
+        }
+
+        private void ListView_ClearLog(object sender, RoutedEventArgs e)
+        {
+            Messages.Clear();
+        }
+
+        private void ListView_ExportLog(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog();
+            dialog.FileName = $"{GlobalVar.gId}-log";
+            dialog.DefaultExt = ".txt";
+            dialog.Filter = "下载日志 (.txt)|*.txt";
+
+            bool? result = dialog.ShowDialog();
+
+            if (result == true)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var message in Messages)
+                {
+                    string line = $"{message.Time},{message.Message},{message.MessageType}";
+                    sb.AppendLine(line);
+                }
+
+                File.WriteAllText(dialog.FileName, sb.ToString());
+            }
+        }
+
+        private async void TextBox_WeiboId_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+                await Start(TextBox_WeiboId.Text.Trim());
+        }
+
+        private void OpenGithub(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/hupo376787/WeiboAlbumDownloader") { UseShellExecute = true });
         }
 
         private void ComboBox_DataSource_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -1138,15 +1182,5 @@ namespace WeiboAlbumDownloader
             driver.Quit();
         }
 
-        private async void TextBox_WeiboId_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.Enter)
-                await Start(TextBox_WeiboId.Text.Trim());
-        }
-
-        private void OpenGithub(object sender, RoutedEventArgs e)
-        {
-            Process.Start(new ProcessStartInfo("https://github.com/hupo376787/WeiboAlbumDownloader") { UseShellExecute = true });
-        }
     }
 }
