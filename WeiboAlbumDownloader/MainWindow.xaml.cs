@@ -34,7 +34,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下版本号
         //②Github release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        double currentVersion = 3.5;
+        double currentVersion = 3.6;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -50,6 +50,7 @@ namespace WeiboAlbumDownloader
         private List<string> uids = new List<string>();
         //用来跳过到下一个uid的计数。如果当前uid下载的时候已存在文件超过此计数，则判定下载过了。
         private int countDownloadedSkipToNextUser;
+        private bool isDownloading;
         private CancellationTokenSource? cancellationTokenSource;
         public ObservableCollection<MessageModel> Messages { get; set; } = new ObservableCollection<MessageModel>();
 
@@ -117,9 +118,10 @@ namespace WeiboAlbumDownloader
                 cancellationTokenSource?.Cancel();
                 cancellationTokenSource = new CancellationTokenSource();
 
-                if (string.IsNullOrEmpty(userId))
+                var conv = long.TryParse(userId, out long temp);
+                if (string.IsNullOrEmpty(userId) || !conv)
                 {
-                    AppendLog("uid呢？u i d呢？请填写uid再下载。参考上面说明获取uid", MessageEnum.Error);
+                    AppendLog("错误的微博uid，参考上面说明获取uid", MessageEnum.Error);
                     return;
                 }
 
@@ -633,8 +635,12 @@ namespace WeiboAlbumDownloader
                                 var res = await HttpHelper.GetAsync<WeiboCnMobileModel>(url, dataSource, cookie!);
                                 if (res != null && res?.Ok == 1 && res?.Data != null && res?.Data?.Cards != null && res?.Data?.Cards?.Count > 0)
                                 {
-                                    GlobalVar.gSinceId = sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
+                                    if (res?.Data?.CardlistInfo?.SinceId != null)
+                                        GlobalVar.gSinceId = sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
                                     AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页", MessageEnum.Info);
+
+                                    if (res?.Data?.Cards?[0]?.Mblog?.User?.ScreenName == null || res?.Data?.CardlistInfo?.SinceId == null)
+                                        return;
 
                                     //获取用户资料
                                     if (!cachedUserInfo)
@@ -905,13 +911,20 @@ namespace WeiboAlbumDownloader
 
 
                         //单个用户结束下载
-                        string info = $"{nickName} <a href=\"//c\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
-                        await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
-                        SentrySdk.CaptureMessage(info);
+                        if (!string.IsNullOrEmpty(nickName))
+                        {
+                            string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
+                            await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
+                            SentrySdk.CaptureMessage(info);
 
-                        AddToUserIdList(userId, nickName);
+                            AddToUserIdList(userId, nickName);
 
-                        AppendLog(info, MessageEnum.Info);
+                            AppendLog(info, MessageEnum.Info);
+                        }
+                        else
+                        {
+                            AppendLog("遇到错误，请重试", MessageEnum.Error);
+                        }
                     }
                 });
 
@@ -926,6 +939,7 @@ namespace WeiboAlbumDownloader
             }
             finally
             {
+                isDownloading = false;
                 tbDownload.Text = "开始下载";
             }
         }
@@ -1016,11 +1030,16 @@ namespace WeiboAlbumDownloader
         {
             if (tbDownload.Text == "开始下载")
             {
+                if (isDownloading)
+                    return;
+
+                isDownloading = true;
                 tbDownload.Text = "停止下载";
                 await Start(TextBox_WeiboId.Text.Trim());
             }
             else
             {
+                isDownloading = false;
                 tbDownload.Text = "开始下载";
                 cancellationTokenSource?.Cancel();
             }
@@ -1043,7 +1062,7 @@ namespace WeiboAlbumDownloader
 
         private void ListView_CopyLog(object sender, RoutedEventArgs e)
         {
-            if(ListView_Messages.SelectedItem != null)
+            if (ListView_Messages.SelectedItem != null)
                 Clipboard.SetText((ListView_Messages.SelectedItem! as MessageModel)!.Message);
         }
 
@@ -1077,12 +1096,27 @@ namespace WeiboAlbumDownloader
         private async void TextBox_WeiboId_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (isDownloading)
+                    return;
+
+                isDownloading = true;
+                tbDownload.Text = "停止下载";
                 await Start(TextBox_WeiboId.Text.Trim());
+            }
         }
 
         private void OpenGithub(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo("https://github.com/hupo376787/WeiboAlbumDownloader") { UseShellExecute = true });
+        }
+
+        private void OpenSettings(object sender, RoutedEventArgs e)
+        {
+            var set = new SettingsWindow();
+            set.Owner = this;
+            set.ShowDialog();
+            AppendLog("设置已更新");
         }
 
         private void ComboBox_DataSource_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

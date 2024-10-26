@@ -14,6 +14,8 @@
     <None Remove="Assets\cookie.png" />
     <None Remove="Assets\download.png" />
     <None Remove="Assets\github.png" />
+    <None Remove="Assets\pushplus.png" />
+    <None Remove="Assets\settings.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +26,8 @@
     <Resource Include="Assets\cloud-computing.png" />
     <Resource Include="Assets\cookie.png" />
     <Resource Include="Assets\download.png" />
+    <Resource Include="Assets\pushplus.png" />
+    <Resource Include="Assets\settings.png" />
     <Resource Include="weibo.ico" />
   </ItemGroup>
 

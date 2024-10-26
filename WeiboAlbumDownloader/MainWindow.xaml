@@ -105,10 +105,20 @@
         Width="64"
         Height="32"
         Margin="8,0"
+        Click="OpenSettings"
+        ToolTip="设置">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="18" Source="/Assets/settings.png" />
+        </StackPanel>
+      </mica:Button>
+      <mica:Button
+        Width="64"
+        Height="32"
+        Margin="8,0"
         Click="OpenGithub"
         ToolTip="Fork me on Github">
         <StackPanel Orientation="Horizontal">
-          <Image Width="24" Source="/Assets/github.png" />
+          <Image Width="20" Source="/Assets/github.png" />
         </StackPanel>
       </mica:Button>
     </StackPanel>
