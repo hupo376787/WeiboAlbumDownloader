@@ -178,10 +178,12 @@
           Foreground="Gray" />
         <TextBlock
           x:Name="TextBlock_WeiboDesc"
+          Margin="8,0"
           HorizontalAlignment="Center"
           d:Text="微博[888] 关注[274] 粉丝[7.9万] 分组[1]"
           FontSize="16"
-          Foreground="Gray" />
+          Foreground="Gray"
+          TextWrapping="Wrap" />
       </StackPanel>
       <ListView
         x:Name="ListView_Messages"

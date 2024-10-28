@@ -32,7 +32,7 @@ namespace WeiboAlbumDownloader
     {
         //发行说明：
         //①此处升级一下版本号
-        //②Github release新建一个新版本Tag
+        //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
         double currentVersion = 3.6;
 
@@ -93,7 +93,8 @@ namespace WeiboAlbumDownloader
             var latestVersionString = await GithubHelper.GetLatestVersion();
             if (string.IsNullOrEmpty(latestVersionString))
             {
-                AppendLog("从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版失败，请检查网络或稍后再试", MessageEnum.Warning);
+                //AppendLog("从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版失败，请检查网络或稍后再试", MessageEnum.Warning);
+                latestVersionString = await GithubHelper.GetGiteeLatestVersion();
             }
             else
             {
