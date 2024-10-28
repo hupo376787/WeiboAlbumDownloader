@@ -31,7 +31,7 @@ namespace WeiboAlbumDownloader.Helpers
             }
             catch (Exception ex)
             {
-                return "获取最新版失败";
+                return null;
             }
         }
 
@@ -56,7 +56,7 @@ namespace WeiboAlbumDownloader.Helpers
             }
             catch (Exception ex)
             {
-                return "获取最新版失败";
+                return null;
             }
         }
     }
