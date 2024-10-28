@@ -35,7 +35,7 @@ namespace WeiboAlbumDownloader.Helpers
             }
         }
 
-         public static async Task<string> GetGiteeLatestVersion()
+        public static async Task<string> GetGiteeLatestVersion()
         {
             try
             {
@@ -51,7 +51,7 @@ namespace WeiboAlbumDownloader.Helpers
                     var version = match.Value.Replace("<a title=\"", "").Replace("\"", "");
                     return version;
                 }
-        
+
                 return null;
             }
             catch (Exception ex)
