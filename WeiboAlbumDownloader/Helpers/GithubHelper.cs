@@ -31,33 +31,33 @@ namespace WeiboAlbumDownloader.Helpers
             }
             catch (Exception ex)
             {
-                //return ex.ToString();
+                return “获取最新版失败”;
             }
         }
 
          public static async Task<string> GetGiteeLatestVersion()
-         {
-             try
-             {
-                 HttpClient client = new HttpClient();
-                 var resp = await client.GetAsync("https://gitee.com/hupo376787/weibo-album-downloader/tags");
-                 var body = await resp.Content.ReadAsStringAsync();
-                 string pattern = @"<a\s+title=""(\d+\.\d+)""";
-                 Regex regex = new Regex(pattern);
-                 //MatchCollection matches = regex.Matches(body);
-                 Match match = Regex.Matches(body, pattern);
-                 if(match.Success)
-                 {
-                     var version = match.Value.Replace("tags/", "").Replace(".zip", "");
-                     return version;
-                 }
-    
-                 return null;
-             }
-             catch(Exception ex)
-             {
-                //return ex.ToString();
-             }
-         }
+{
+    try
+    {
+        HttpClient client = new HttpClient();
+        var resp = await client.GetAsync("https://gitee.com/hupo376787/weibo-album-downloader/tags");
+        var body = await resp.Content.ReadAsStringAsync();
+        string pattern = @"<a\s+title=""(\d+\.\d+)""";
+        Regex regex = new Regex(pattern);
+        //MatchCollection matches = regex.Matches(body);
+        Match match = Regex.Match(body, pattern);
+        if (match.Success)
+        {
+            var version = match.Value.Replace("<a title=\"", "").Replace("\"", "");
+            return version;
+        }
+
+        return null;
+    }
+    catch (Exception ex)
+    {
+        return “获取最新版失败”;
+    }
+}
     }
 }
