@@ -31,8 +31,33 @@ namespace WeiboAlbumDownloader.Helpers
             }
             catch (Exception ex)
             {
-                return ex.ToString();
+                //return ex.ToString();
             }
         }
+
+         public static async Task<string> GetGiteeLatestVersion()
+         {
+             try
+             {
+                 HttpClient client = new HttpClient();
+                 var resp = await client.GetAsync("https://gitee.com/hupo376787/weibo-album-downloader/tags");
+                 var body = await resp.Content.ReadAsStringAsync();
+                 string pattern = @"<a\s+title=""(\d+\.\d+)""";
+                 Regex regex = new Regex(pattern);
+                 //MatchCollection matches = regex.Matches(body);
+                 Match match = Regex.Matches(body, pattern);
+                 if(match.Success)
+                 {
+                     var version = match.Value.Replace("tags/", "").Replace(".zip", "");
+                     return version;
+                 }
+    
+                 return null;
+             }
+             catch(Exception ex)
+             {
+                //return ex.ToString();
+             }
+         }
     }
 }
