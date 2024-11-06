@@ -34,6 +34,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
+        public static double currentVersion = 3.7;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -93,19 +94,19 @@ namespace WeiboAlbumDownloader
             {
                 latestVersionString = await GithubHelper.GetGiteeLatestVersion();
             }
-            AppendLog($"当前程序版本 V{GlobalVar.currentVersion}，最新版为 V{latestVersionString}");
+            AppendLog($"当前程序版本 V{currentVersion}，最新版为 V{latestVersionString}");
 
             var res = double.TryParse(latestVersionString, out double latestVersion);
             if (res)
             {
-                if (latestVersion > GlobalVar.currentVersion)
+                if (latestVersion > currentVersion)
                 {
                     await Application.Current.Dispatcher.InvokeAsync(async () =>
                     {
                         var uiMessageBox = new MicaWPF.Dialogs.ContentDialog
                         {
                             Title = "提示",
-                            Content = $"检测到新版本 V{latestVersionString}，当前程序版本 V{GlobalVar.currentVersion}，点击确定下载",
+                            Content = $"检测到新版本 V{latestVersionString}，当前程序版本 V{currentVersion}，点击确定下载",
                             PrimaryButtonText = "OK"
                         };
 
@@ -921,7 +922,7 @@ namespace WeiboAlbumDownloader
                         //单个用户结束下载
                         if (!string.IsNullOrEmpty(nickName))
                         {
-                            string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{GlobalVar.currentVersion}<img src=\"{headUrl}\">";
+                            string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
                             SentrySdk.CaptureMessage(info);
 

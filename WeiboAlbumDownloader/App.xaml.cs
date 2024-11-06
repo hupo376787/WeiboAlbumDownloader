@@ -39,13 +39,14 @@ namespace WeiboAlbumDownloader
             e.Handled = true;
         }
 
-        private void OnStartup(object sender, StartupEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
+            base.OnStartup(e);
             SentrySdk.ConfigureScope(scope =>
             {
                 scope.SetTag("AppName", Assembly.GetExecutingAssembly().GetName().Name!);
                 scope.SetTag("DeviceName", Environment.MachineName);
-                scope.SetTag("AppVersion", GlobalVar.currentVersion.ToString("#0.0"));
+                scope.SetTag("DeviceName", WeiboAlbumDownloader.MainWindow.currentVersion.ToString("#0.0"));
             });
         }
 
