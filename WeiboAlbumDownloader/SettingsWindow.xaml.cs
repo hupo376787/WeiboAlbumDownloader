@@ -59,7 +59,7 @@ namespace WeiboAlbumDownloader
                 PushPlusToken = TextBox_PushPlusToken.Text,
                 EnableCrontab = (bool)ToggleSwitch_Crontab.IsChecked!,
                 Crontab = TextBox_Crontab.Text,
-                CountDownloadedSkipToNextUser = Convert.ToInt32(TextBox_SkipCount.Text)
+                CountDownloadedSkipToNextUser = string.IsNullOrEmpty(TextBox_SkipCount.Text) ? 20 : Convert.ToInt32(TextBox_SkipCount.Text)
             };
             File.WriteAllText("Settings.json", JsonConvert.SerializeObject(settings, Formatting.Indented));
             this.Close();

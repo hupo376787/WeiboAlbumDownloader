@@ -31,10 +31,9 @@ namespace WeiboAlbumDownloader
     public partial class MainWindow : MicaWindow
     {
         //发行说明：
-        //①此处升级一下版本号
+        //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        double currentVersion = 3.6;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -88,26 +87,34 @@ namespace WeiboAlbumDownloader
 
         private async Task GetVersion()
         {
-            AppendLog($"当前程序版本 V{currentVersion}");
-
+            //AppendLog($"当前程序版本 V{GlobalVar.currentVersion}");
             var latestVersionString = await GithubHelper.GetLatestVersion();
-            if (string.IsNullOrEmpty(latestVersionString))
+            if (string.IsNullOrEmpty(latestVersionString) || latestVersionString?.Length > 5)
             {
-                //AppendLog("从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版失败，请检查网络或稍后再试", MessageEnum.Warning);
                 latestVersionString = await GithubHelper.GetGiteeLatestVersion();
             }
-            else
+            AppendLog($"当前程序版本 V{GlobalVar.currentVersion}，最新版为 V{latestVersionString}");
+
+            var res = double.TryParse(latestVersionString, out double latestVersion);
+            if (res)
             {
-                var res = double.TryParse(latestVersionString, out double latestVersion);
-                //获取成功
-                if (res)
+                if (latestVersion > GlobalVar.currentVersion)
                 {
-                    if (latestVersion > currentVersion)
-                        AppendLog($"Github最新版为V{latestVersion}。请从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版", MessageEnum.Success);
-                }
-                else
-                {
-                    AppendLog("从https://github.com/hupo376787/WeiboAlbumDownloader/releases获取最新版失败，请检查网络或稍后再试", MessageEnum.Warning);
+                    await Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        var uiMessageBox = new MicaWPF.Dialogs.ContentDialog
+                        {
+                            Title = "提示",
+                            Content = $"检测到新版本 V{latestVersionString}，当前程序版本 V{GlobalVar.currentVersion}，点击确定下载",
+                            PrimaryButtonText = "OK"
+                        };
+
+                        var res = await uiMessageBox.ShowAsync();
+                        if (res == MicaWPF.Core.Enums.ContentDialogResult.PrimaryButton)
+                        {
+                            Process.Start(new ProcessStartInfo("https://github.com/hupo376787/WeiboAlbumDownloader/releases") { UseShellExecute = true });
+                        }
+                    });
                 }
             }
         }
@@ -914,7 +921,7 @@ namespace WeiboAlbumDownloader
                         //单个用户结束下载
                         if (!string.IsNullOrEmpty(nickName))
                         {
-                            string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{currentVersion}<img src=\"{headUrl}\">";
+                            string info = $"{nickName} <a href=\"//weibo.com/u/{userId}\">{userId}{nickName}</a>于{DateTime.Now.ToString("HH:mm:ss")}结束下载，程序版本V{GlobalVar.currentVersion}<img src=\"{headUrl}\">";
                             await PushPlusHelper.SendMessage(settings?.PushPlusToken!, "微博相册下载", info);
                             SentrySdk.CaptureMessage(info);
 

@@ -1,11 +1,6 @@
 ﻿using Sentry;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -50,6 +45,7 @@ namespace WeiboAlbumDownloader
             {
                 scope.SetTag("AppName", Assembly.GetExecutingAssembly().GetName().Name!);
                 scope.SetTag("DeviceName", Environment.MachineName);
+                scope.SetTag("AppVersion", GlobalVar.currentVersion.ToString("#0.0"));
             });
         }
 
