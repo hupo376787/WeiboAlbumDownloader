@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\batch.png" />
     <None Remove="Assets\cloud-computing.png" />
     <None Remove="Assets\cookie.png" />
     <None Remove="Assets\download.png" />
@@ -19,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\batch.png" />
     <Resource Include="Assets\github.png" />
   </ItemGroup>
 

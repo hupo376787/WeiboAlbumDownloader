@@ -34,7 +34,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 3.7;
+        public static double currentVersion = 4.1;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -61,7 +61,8 @@ namespace WeiboAlbumDownloader
             _ = GetVersion();
             AppendLog("数据源选择weibo.com的时候，程序是从微博相册采集数据，包括微博配图和头像相册等，但是没有视频；数据源选择weibo.cn的时候，程序是从微博时间流中采集数据，包括微博配图以及发布的视频。", MessageEnum.Info);
 
-            InitData();
+            InitUidsData();
+            InitSettingsData();
 
             Directory.CreateDirectory(downloadFolder);
             ComboBox_DataSource.ItemsSource = Enum.GetNames(typeof(WeiboDataSource));
@@ -77,10 +78,16 @@ namespace WeiboAlbumDownloader
                     while (true)
                     {
                         await Task.Delay((int)cron.GetSleepMilliseconds(DateTime.Now));
-                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "开启了定时任务");
+                        AppendLog(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "开启定时任务");
 
                         foreach (var item in uids)
+                        {
                             await Start(item.Trim());
+                            AppendLog("等待60s，下载下一个用户相册数据");
+                            await Task.Delay(60 * 1000);
+                        }
+
+                        AppendLog(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "结束定时任务");
                     }
                 }, TaskCreationOptions.LongRunning);
             }
@@ -139,7 +146,7 @@ namespace WeiboAlbumDownloader
                 GlobalVar.gDataSource = dataSource;
 
                 //读取用户列表和设置
-                InitData();
+                InitSettingsData();
 
                 await Task.Run(async () =>
                 {
@@ -648,7 +655,7 @@ namespace WeiboAlbumDownloader
                                         GlobalVar.gSinceId = sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
                                     AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页", MessageEnum.Info);
 
-                                    if (res?.Data?.Cards?[0]?.Mblog?.User?.ScreenName == null || res?.Data?.CardlistInfo?.SinceId == null)
+                                    if (res?.Data?.Cards?[0]?.Mblog?.User?.ScreenName == null)
                                         return;
 
                                     //获取用户资料
@@ -949,7 +956,10 @@ namespace WeiboAlbumDownloader
             finally
             {
                 isDownloading = false;
-                tbDownload.Text = "开始下载";
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    tbDownload.Text = "开始下载";
+                });
             }
         }
 
@@ -976,16 +986,12 @@ namespace WeiboAlbumDownloader
                 File.AppendAllText("uidList.txt", Environment.NewLine + $"{userId},{nickName}");
         }
 
-        private void InitData()
+        private void InitUidsData()
         {
             //配置文件不存在就创建
             if (!File.Exists("uidList.txt"))
             {
                 File.WriteAllText("uidList.txt", "//可以是多用户，换行隔开。\r\n//行内用英文逗号隔开，用户id(必填),用户名(可选)\r\n");
-            }
-            if (!File.Exists("Settings.json"))
-            {
-                File.WriteAllText("Settings.json", JsonConvert.SerializeObject(new SettingsModel(), Formatting.Indented));
             }
 
             uids.Clear();
@@ -998,6 +1004,15 @@ namespace WeiboAlbumDownloader
 
                 var temp = line.Split(',');
                 uids.Add(temp[0]);
+            }
+
+        }
+
+        private void InitSettingsData()
+        {
+            if (!File.Exists("Settings.json"))
+            {
+                File.WriteAllText("Settings.json", JsonConvert.SerializeObject(new SettingsModel(), Formatting.Indented));
             }
 
             string settingsContent = File.ReadAllText("Settings.json");
@@ -1040,11 +1055,27 @@ namespace WeiboAlbumDownloader
             if (tbDownload.Text == "开始下载")
             {
                 if (isDownloading)
+                {
+                    AppendLog("正在执行下载任务");
                     return;
+                }
 
                 isDownloading = true;
                 tbDownload.Text = "停止下载";
-                await Start(TextBox_WeiboId.Text.Trim());
+
+                string pattern = @"\d+";  // 匹配一个或多个数字
+                Match match = Regex.Match(TextBox_WeiboId.Text.Trim(), pattern);
+
+                if (match.Success)
+                {
+                    await Start(match.Value);
+                }
+                else
+                {
+                    AppendLog("没有找到微博账号", MessageEnum.Warning);
+                    isDownloading = false;
+                    tbDownload.Text = "开始下载";
+                }
             }
             else
             {
@@ -1057,6 +1088,28 @@ namespace WeiboAlbumDownloader
         private void StopDownLoad(object sender, RoutedEventArgs e)
         {
             cancellationTokenSource?.Cancel();
+        }
+
+        private async void BatchDownLoad(object sender, RoutedEventArgs e)
+        {
+            if (isDownloading)
+            {
+                AppendLog("正在执行下载任务");
+                return;
+            }
+
+            isDownloading = true;
+            AppendLog(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "开启批量任务");
+
+            foreach (var item in uids)
+            {
+                await Start(item.Trim());
+                AppendLog("等待60s，下载下一个用户相册数据");
+                await Task.Delay(60 * 1000);
+            }
+
+            AppendLog(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "结束批量任务");
+            isDownloading = false;
         }
 
         private void OpenDir(object sender, RoutedEventArgs e)
@@ -1218,7 +1271,7 @@ namespace WeiboAlbumDownloader
             }
             else
             {
-                Debug.WriteLine("未登录");
+                AppendLog("未登录");
             }
 
             // 程序结束时，手动关闭浏览器

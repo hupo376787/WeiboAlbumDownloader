@@ -32,13 +32,6 @@
         Margin="8,0,0,0"
         VerticalAlignment="Center"
         Text="数据源" />
-      <!--<mica:ToggleSwitch
-        x:Name="ToggleSwitch_Source"
-        Margin="8"
-        Click="ToggleSwitch_Source_Click"
-        Content="weibo.cn"
-        IsChecked="True"
-        ToolTip="数据源从weibo.com还是从weibo.cn获取" />-->
       <ComboBox
         x:Name="ComboBox_DataSource"
         Margin="8"
@@ -68,10 +61,11 @@
         ToolTip="填写uid进行单用户下载或者uidList.txt进行批量下载"
         Watermark="uid" />
       <mica:Button
-        Width="160"
+        Width="110"
         Height="32"
-        Margin="8,0"
+        Margin="8,0,0,0"
         Click="StartDownLoad"
+        CornerRadius="2 0 0 2"
         ToolTip="开始/停止下载，停止下载的时候可能有延后，因为需要等待分页任务下载完才能停">
         <StackPanel Orientation="Horizontal">
           <Image Width="18" Source="/Assets/cloud-computing.png" />
@@ -82,12 +76,23 @@
             Text="开始下载" />
         </StackPanel>
       </mica:Button>
-      <!--<mica:Button
-        Width="140"
+      <mica:Button
+        Width="30"
         Height="32"
-        Margin="8,0"
-        Click="StopDownLoad"
-        Content="停止下载" />-->
+        Margin="-2,0,0,0"
+        Click="BatchDownLoad"
+        CornerRadius="0 2 2 0"
+        FontSize="10"
+        ToolTip="自动循环uidList.txt中所有用户，执行批量下载任务">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="18" Source="/Assets/batch.png" />
+          <TextBlock
+            Margin="8,0,0,0"
+            VerticalAlignment="Center"
+            Text="批量&#x0a;下载"
+            Visibility="Collapsed" />
+        </StackPanel>
+      </mica:Button>
       <mica:Button
         Width="140"
         Height="32"

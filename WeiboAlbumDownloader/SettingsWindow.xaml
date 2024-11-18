@@ -95,6 +95,8 @@
         Margin="8,8,0,0"
         Checked="ToggleSwitch_Checked"
         Content="开启定时下载"
+        Foreground="Gray"
+        ToolTip="定时任务会在设置的Crontab时间启动，自动循环uidList.txt中所有用户，执行下载任务"
         Unchecked="ToggleSwitch_Unchecked" />
       <mica:TextBox
         x:Name="TextBox_Crontab"
