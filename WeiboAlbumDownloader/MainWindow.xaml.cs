@@ -983,7 +983,10 @@ namespace WeiboAlbumDownloader
         {
             //不在列表的，才写入文件
             if (!uids.Contains(userId))
+            {
+                uids.Add(userId);
                 File.AppendAllText("uidList.txt", Environment.NewLine + $"{userId},{nickName}");
+            }
         }
 
         private void InitUidsData()
