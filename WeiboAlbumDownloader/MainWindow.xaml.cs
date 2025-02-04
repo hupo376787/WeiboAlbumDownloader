@@ -228,7 +228,7 @@ namespace WeiboAlbumDownloader
                                                 Debug.WriteLine(fileName);
                                                 if (File.Exists(fileName))
                                                 {
-                                                    AppendLog("文件已存在，跳过下载" + fileName, MessageEnum.Warning);
+                                                    AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileName), MessageEnum.Warning);
                                                     countDownloadedSkipToNextUser++;
                                                     await Task.Delay(500);
                                                     continue;
@@ -324,7 +324,7 @@ namespace WeiboAlbumDownloader
                                                 Debug.WriteLine(fileName);
                                                 if (File.Exists(fileName))
                                                 {
-                                                    AppendLog("文件已存在，跳过下载" + fileName, MessageEnum.Warning);
+                                                    AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileName), MessageEnum.Warning);
                                                     countDownloadedSkipToNextUser++;
                                                     await Task.Delay(500);
                                                     continue;
@@ -594,7 +594,7 @@ namespace WeiboAlbumDownloader
                                         //已经下载过的跳过
                                         if (File.Exists(fileName))
                                         {
-                                            AppendLog("文件已存在，跳过下载" + fileName, MessageEnum.Warning);
+                                            AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileName), MessageEnum.Warning);
                                             countDownloadedSkipToNextUser++;
                                             await Task.Delay(500);
                                             continue;
@@ -800,7 +800,7 @@ namespace WeiboAlbumDownloader
                                             //已经下载过的跳过
                                             if (File.Exists(fileNamee))
                                             {
-                                                AppendLog("文件已存在，跳过下载" + fileNamee, MessageEnum.Warning);
+                                                AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
                                                 countDownloadedSkipToNextUser++;
                                                 await Task.Delay(500);
                                                 continue;
@@ -842,7 +842,7 @@ namespace WeiboAlbumDownloader
                                             //已经下载过的跳过
                                             if (File.Exists(fileNamee))
                                             {
-                                                AppendLog("文件已存在，跳过下载" + fileNamee, MessageEnum.Warning);
+                                                AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
                                                 countDownloadedSkipToNextUser++;
                                                 await Task.Delay(500);
                                                 continue;
@@ -884,7 +884,7 @@ namespace WeiboAlbumDownloader
                                             //已经下载过的跳过
                                             if (File.Exists(fileNamee))
                                             {
-                                                AppendLog("文件已存在，跳过下载" + fileNamee, MessageEnum.Warning);
+                                                AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
                                                 countDownloadedSkipToNextUser++;
                                                 await Task.Delay(500);
                                                 continue;
