@@ -1,5 +1,5 @@
 # WeiboAlbumDownloader
-微博相册下载工具C#版
+微博相册下载工具C#版，界面全新设计
 
 
 # 项目说明
@@ -9,6 +9,7 @@
 和其他语言比如python版本类似，都可以实现用户相册的采集下载工作。不过本软件UI更加美观好看。下载文件名以日期+博文+编号命名。本软件还额外增加自动修改文件日期为发博日期的功能，方便用户按照日期就行分组和排序。这个是其他工具暂时没有的功能。软件采用Selenium自动化扫码获取cookie，大大提高采集成功率。以及随机延时模拟人类刷微博的操作。
 
 ![image-20231227192302467](./img/a.jpg)
+![image-20231227192302467](./img/b.jpg)
 
 
 
@@ -29,7 +30,7 @@
 
 # 使用说明
 
-获取微博用户uid以及web版微博Cookie，填入到软件根目录的Settings.json中即可。
+获取微博用户uid以及web版微博Cookie，~~填入到软件根目录的Settings.json中即可~~，点击设置里面扫码获取即可。
 
 如果想要在下载完发送push+通知，请填写PushPlusToken字段。不填就不发送。
 
@@ -40,12 +41,18 @@
 | WeiboCnCookie  | [weibo.cn](https://weibo.cn/) Cookie                         |
 | WeiboComCookie | [weibo.com](https://weibo.com/) Cookie                       |
 | PushPlusToken  | 推送到微信，填了就会发送                                     |
+| ShowHeadImage  | 首页是否显示头像                        |
 | EnableCrontab  | 否开启Crontab定时任务                                        |
 | Crontab        | Crontab定时任务，例如"14 2 * * *"表示每天凌晨2点14分开始执行 |
+| EnableDatetimeRange        | 是否启用时间范围 |
+| StartDateTime        | 设置截至时间，例如"2025/1/1"表示下载2025年1月1日至今的所有图片 |
+| CountDownloadedSkipToNextUser  | 自动跳到下一个用户的计数器，比如设置20，那么程序会检测本地如果达到20个已经存在的图片了，就认为当前用户已经下载过了，接下来就停止程序或者跳到下一个用户                        |
 
 
 
 # 数据源
+
+推荐使用m.weibo.cn。
 
 数据源区分[weibo.com](https://weibo.com/) 和[weibo.cn](https://weibo.cn/) ，[weibo.com](https://weibo.com/) 是获取用户相册的数据（不包含视频），返回的是json格式。 [weibo.cn](https://weibo.cn/) 是获取的用户的时间流数据（包含视频），返回的是html格式。
 
@@ -83,15 +90,17 @@ Cookie可以通过点击上方按钮打开页面扫码获取，或者按F12进�
 
 5. [Selenium](https://www.selenium.dev/)，开源的浏览器自动化工具。
 
-6. [CronExpressionDescriptor](https://github.com/bradymholt/cron-expression-descriptor)，翻译crontab数据为可阅读的文本。
+6. [PushPlus](https://www.pushplus.plus/)，发送消息到微信等即时工具。
 
-7. [TimeCrontab](https://github.com/MonkSoul/TimeCrontab)，解析crontab时间数据。
+7. [CronExpressionDescriptor](https://github.com/bradymholt/cron-expression-descriptor)，翻译crontab数据为可阅读的文本。
 
-8. [Weibo Spider](https://github.com/dataabc/weiboSpider)，一个开源微博爬虫。
+8. [TimeCrontab](https://github.com/MonkSoul/TimeCrontab)，解析crontab时间数据。
 
-9. 图标来自[FlatIcon](https://www.flaticon.com/)。
+9. [Weibo Spider](https://github.com/dataabc/weiboSpider)，一个开源微博爬虫。
 
-10. [免责声明](https://github.com/JoeanAmier/TikTokDownloader/blob/master/README.md)
+10. 图标来自[FlatIcon](https://www.flaticon.com/)。
+
+11. [免责声明](https://github.com/JoeanAmier/TikTokDownloader/blob/master/README.md)
 
 
 # 是否支持项目个性化定制

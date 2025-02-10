@@ -8,7 +8,7 @@
   xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
   Title="设置"
   Width="800"
-  Height="520"
+  Height="600"
   FontFamily="微软雅黑"
   Icon="/weibo.ico"
   ResizeMode="NoResize"
@@ -17,112 +17,229 @@
   WindowStartupLocation="CenterOwner"
   mc:Ignorable="d">
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Margin="8,0,16,0">
-      <mica:Button
-        Width="200"
-        Height="32"
-        Margin="8,0"
-        HorizontalAlignment="Left"
-        Background="LightYellow"
-        Click="GetCookie"
-        Tag="cn"
-        ToolTip="打开手机版微博，扫描二维码确认登陆">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/cookie.png" />
-          <TextBlock
+    <Grid>
+      <StackPanel Margin="8">
+        <TextBlock
+          Margin="8,0,0,0"
+          VerticalAlignment="Center"
+          Foreground="Gray"
+          Text="数据源" />
+        <ComboBox
+          x:Name="ComboBox_DataSource"
+          Margin="16,8,0,8"
+          ToolTip="不懂的话选择m.weibo.cn" />
+
+        <TextBlock
+          Margin="8,8,0,0"
+          VerticalAlignment="Center"
+          Foreground="Gray"
+          Text="Cookie" />
+        <Grid Margin="8,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <mica:Button
+            Width="200"
+            Height="32"
+            Margin="8,0"
+            HorizontalAlignment="Left"
+            Background="LightYellow"
+            Click="GetCookie"
+            Tag="cn"
+            ToolTip="打开手机版微博，扫描二维码确认登陆">
+            <StackPanel Orientation="Horizontal">
+              <Image Width="18" Source="/Assets/cookie.png" />
+              <TextBlock
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Text="扫码获取weibo.cn Cookie" />
+            </StackPanel>
+          </mica:Button>
+          <mica:TextBox
+            x:Name="TextBox_WeiboCnCookie"
+            Grid.Column="1"
+            Height="32"
             Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="扫码获取weibo.cn Cookie" />
-        </StackPanel>
-      </mica:Button>
-      <mica:TextBox
-        x:Name="TextBox_WeiboCnCookie"
-        Height="60"
-        Margin="8,8,0,0"
-        TextWrapping="Wrap"
-        Watermark="weibo.cn cookie" />
+            Watermark="weibo.cn cookie" />
+        </Grid>
 
-      <mica:Button
-        Width="200"
-        Height="32"
-        Margin="8,8,0,0"
-        HorizontalAlignment="Left"
-        Background="LightYellow"
-        Click="GetCookie"
-        Tag="com"
-        ToolTip="打开手机版微博，扫描二维码确认登陆">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/cookie.png" />
-          <TextBlock
+        <Grid Margin="8,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <mica:Button
+            Width="200"
+            Height="32"
+            Margin="8,0"
+            HorizontalAlignment="Left"
+            Background="LightYellow"
+            Click="GetCookie"
+            Tag="com"
+            ToolTip="打开手机版微博，扫描二维码确认登陆">
+            <StackPanel Orientation="Horizontal">
+              <Image Width="18" Source="/Assets/cookie.png" />
+              <TextBlock
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Text="扫码获取weibo.com Cookie" />
+            </StackPanel>
+          </mica:Button>
+          <mica:TextBox
+            x:Name="TextBox_WeiboComCookie"
+            Grid.Column="1"
+            Height="32"
             Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="扫码获取weibo.com Cookie" />
-        </StackPanel>
-      </mica:Button>
-      <mica:TextBox
-        x:Name="TextBox_WeiboComCookie"
-        Height="60"
-        Margin="8,8,0,0"
-        TextWrapping="Wrap"
-        Watermark="weibo.com cookie" />
+            Watermark="weibo.com cookie" />
+        </Grid>
 
-      <mica:Button
-        Width="200"
-        Height="32"
-        Margin="8,8,0,0"
-        HorizontalAlignment="Left"
-        Background="LightYellow"
-        Click="OpenPushPlus"
-        Tag="com"
-        ToolTip="打开PushPlus官网获取">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/pushplus.png" />
-          <TextBlock
+        <TextBlock
+          Grid.Row="1"
+          Margin="16,8,8,0"
+          VerticalAlignment="Center"
+          Foreground="Gray"
+          TextWrapping="Wrap">
+          <Run Text="扫码无法打开浏览器时，可自行在PC浏览器打开" />
+          <Hyperlink NavigateUri="https://weibo.com/" RequestNavigate="Hyperlink_RequestNavigate">weibo.com</Hyperlink>
+          <Run Text="，点击某一用户头像，进入主页。uid就是地址栏中的最后一串数字，比如https://weibo.com/u/1000000000。Cookie可以通过点击上方按钮打开页面扫码获取，或者按F12进入控制台，网络-全部，在名称栏选择uid，标头-请求标头-Cookie。" />
+          <Hyperlink NavigateUri="https://weibo.com/" RequestNavigate="Hyperlink_RequestNavigate">weibo.com</Hyperlink>
+          <Run Text="和" />
+          <Hyperlink NavigateUri="https://weibo.cn" RequestNavigate="Hyperlink_RequestNavigate">weibo.cn</Hyperlink>
+          <Run Text="cookie不一样，请注意区分。" />
+        </TextBlock>
+
+        <TextBlock
+          Margin="8,16,0,0"
+          VerticalAlignment="Center"
+          Foreground="Gray"
+          Text="消息推送" />
+        <Grid Margin="8,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <mica:Button
+            Width="200"
+            Height="32"
+            Margin="8,0"
+            HorizontalAlignment="Left"
+            Background="LightYellow"
+            Click="OpenPushPlus"
+            Tag="com"
+            ToolTip="打开PushPlus官网获取">
+            <StackPanel Orientation="Horizontal">
+              <Image Width="18" Source="/Assets/pushplus.png" />
+              <TextBlock
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Text="打开PushPlus官网获取        " />
+            </StackPanel>
+          </mica:Button>
+          <mica:TextBox
+            x:Name="TextBox_PushPlusToken"
+            Grid.Column="1"
+            Width="554"
+            Height="32"
             Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="打开PushPlus官网获取        " />
+            HorizontalAlignment="Left"
+            Watermark="Push plus token" />
+        </Grid>
+
+        <TextBlock
+          Margin="8,16,0,0"
+          VerticalAlignment="Center"
+          Foreground="Gray"
+          Text="下载设置" />
+        <mica:ToggleSwitch
+          x:Name="ToggleSwitch_ShowHeadImage"
+          Margin="16,8,0,0"
+          Content="显示作者头像"
+          Foreground="Gray" />
+        <StackPanel Margin="8,0,0,0" Orientation="Horizontal">
+          <mica:ToggleSwitch
+            x:Name="ToggleSwitch_Crontab"
+            Margin="8,8,0,0"
+            Checked="ToggleSwitch_Checked"
+            Content="启用定时下载"
+            Foreground="Gray"
+            ToolTip="定时任务会在设置的Crontab时间启动，自动循环uidList.txt中所有用户，执行下载任务"
+            Unchecked="ToggleSwitch_Unchecked" />
+          <mica:TextBox
+            x:Name="TextBox_Crontab"
+            Width="628"
+            Height="32"
+            Margin="16,8,0,0"
+            TextWrapping="Wrap"
+            Watermark="例如，14 2 * * *，代表每天凌晨2点14分开始下载" />
         </StackPanel>
-      </mica:Button>
-      <mica:TextBox
-        x:Name="TextBox_PushPlusToken"
-        Height="32"
-        Margin="8,8,0,0"
-        TextWrapping="Wrap"
-        Watermark="Push plus token" />
 
-      <mica:ToggleSwitch
-        x:Name="ToggleSwitch_Crontab"
-        Margin="8,8,0,0"
-        Checked="ToggleSwitch_Checked"
-        Content="开启定时下载"
-        Foreground="Gray"
-        ToolTip="定时任务会在设置的Crontab时间启动，自动循环uidList.txt中所有用户，执行下载任务"
-        Unchecked="ToggleSwitch_Unchecked" />
-      <mica:TextBox
-        x:Name="TextBox_Crontab"
-        Height="32"
-        Margin="8,8,0,0"
-        TextWrapping="Wrap"
-        Watermark="例如，14 2 * * *，代表每天凌晨2点14分开始下载" />
+        <StackPanel Margin="8,0,0,0" Orientation="Horizontal">
+          <mica:ToggleSwitch
+            x:Name="ToggleSwitch_DatetimeRange"
+            Margin="8,8,0,0"
+            Checked="ToggleSwitch_DatetimeRangeChecked"
+            Content="启用时间范围"
+            Foreground="Gray"
+            ToolTip="开启后仅下载指定时间范围内的微博数据"
+            Unchecked="ToggleSwitch_DatetimeRangeUnchecked" />
+          <TextBlock
+            Margin="16,13,0,0"
+            FontSize="13"
+            Foreground="Gray"
+            Text="自" />
+          <DatePicker
+            x:Name="DatePicker_Start"
+            Width="100"
+            Margin="2,12,0,0"
+            BorderThickness="0"
+            Foreground="Gray" />
+          <TextBlock
+            Margin="2,13,0,0"
+            FontSize="13"
+            Foreground="Gray"
+            Text="至最新日期" />
+        </StackPanel>
 
-      <TextBlock
-        Margin="8,8,0,0"
-        Foreground="Gray"
-        Text="自动跳到下一个用户下载的计数" />
-      <mica:TextBox
-        x:Name="TextBox_SkipCount"
-        Height="32"
-        Margin="8,8,0,0"
-        TextWrapping="Wrap"
-        Watermark="下载用户的文件如果在本地已经存在设置的个数，软件就认为当前用户已经下载完成" />
+        <StackPanel Margin="8,0,0,0" Orientation="Horizontal">
+          <TextBlock
+            Margin="8,8,8,0"
+            VerticalAlignment="Center"
+            Foreground="Gray"
+            Text="自动跳到下一个用户下载的计数" />
+          <mica:TextBox
+            x:Name="TextBox_SkipCount"
+            Width="586"
+            Height="32"
+            Margin="8,8,0,0"
+            TextWrapping="Wrap"
+            Watermark="下载用户的文件如果在本地已经存在设置的个数，软件就认为当前用户已经下载完成" />
+        </StackPanel>
 
-      <mica:Button
-        Width="100"
-        Height="32"
-        Margin="8,12,0,0"
-        Background="#FFBF00"
-        Click="Confirm_Click"
-        Content="OK" />
-    </StackPanel>
+        <StackPanel
+          Margin="0,16,0,0"
+          HorizontalAlignment="Center"
+          Orientation="Horizontal">
+          <mica:Button
+            Width="100"
+            Height="32"
+            Background="#FFBF00"
+            Click="Confirm_Click"
+            Content="OK" />
+          <mica:Button
+            Width="100"
+            Height="32"
+            Margin="24,0,0,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="OpenGithub"
+            ToolTip="Fork me on Github">
+            <StackPanel Orientation="Horizontal">
+              <Image Width="20" Source="/Assets/github.png" />
+            </StackPanel>
+          </mica:Button>
+        </StackPanel>
+      </StackPanel>
+    </Grid>
   </ScrollViewer>
 </mica:MicaWindow>

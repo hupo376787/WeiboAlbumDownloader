@@ -1,12 +1,8 @@
 ﻿using HtmlAgilityPack;
 using MicaWPF.Controls;
 using Newtonsoft.Json;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using Sentry;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -34,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 4.2;
+        public static double currentVersion = 5.1;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -42,7 +38,7 @@ namespace WeiboAlbumDownloader
         /// cn是从 https://weibo.cn/10000000000/profile?page=2获取html解析发布的微博
         /// m.cn是移动端api，可以从 https://m.weibo.cn/api/container/getIndex?type=uid&value=10000000000&containerid=10760310000000000&since_id=5040866311798795，since_id第一次为空，containerid以107603开头是获取时间线，100505开头是个人资料
         /// </summary>
-        private WeiboDataSource dataSource = WeiboDataSource.WeiboCn;
+        private WeiboDataSource dataSource = WeiboDataSource.WeiboCnMobile;
         private int countPerPage = 100;
         private string downloadFolder = Environment.CurrentDirectory + "//DownLoad//";
         private SettingsModel? settings;
@@ -59,14 +55,10 @@ namespace WeiboAlbumDownloader
             InitializeComponent();
 
             _ = GetVersion();
-            AppendLog("数据源选择weibo.com的时候，程序是从微博相册采集数据，包括微博配图和头像相册等，但是没有视频；数据源选择weibo.cn的时候，程序是从微博时间流中采集数据，包括微博配图以及发布的视频。", MessageEnum.Info);
-
             InitUidsData();
             InitSettingsData();
 
             Directory.CreateDirectory(downloadFolder);
-            ComboBox_DataSource.ItemsSource = Enum.GetNames(typeof(WeiboDataSource));
-            ComboBox_DataSource.SelectedIndex = 1;
             ListView_Messages.ItemsSource = Messages;
 
             //定时任务
@@ -143,7 +135,7 @@ namespace WeiboAlbumDownloader
 
                 //用于Sentry崩溃收集
                 GlobalVar.gId = userId;
-                GlobalVar.gDataSource = dataSource;
+                GlobalVar.gDataSource = dataSource = settings.DataSource;
 
                 //读取用户列表和设置
                 InitSettingsData();
@@ -220,6 +212,27 @@ namespace WeiboAlbumDownloader
 
                                                 string photoUrl = photo.pic_host + "/large/" + photo.pic_name;
                                                 DateTime timestamp = DateTime.UnixEpoch.AddSeconds(photo.timestamp + 8 * 3600);
+
+                                                //时间范围过滤，比设置日期早的跳过
+                                                if ((bool)settings?.EnableDatetimeRange)
+                                                {
+                                                    if (item.caption == "微博配图" && timestamp < settings?.StartDateTime)
+                                                    {
+                                                        AppendLog($"翻页到截至日期{settings?.StartDateTime}，停止下载");
+                                                        return;
+                                                    }
+                                                    //if (card?.ProfileTypeId == "proweibotop_" && timestamp < settings?.StartDateTime)
+                                                    //    continue;
+                                                    //else if (card?.ProfileTypeId == "proweibotop_" && timestamp >= settings?.StartDateTime)
+                                                    //{
+
+                                                    //}
+                                                    //else if (timestamp < settings?.StartDateTime)
+                                                    //{
+                                                    //    AppendLog($"翻页到截至日期{settings?.StartDateTime}，停止下载");
+                                                    //    return;
+                                                    //}
+                                                }
 
                                                 var invalidChar = System.IO.Path.GetInvalidFileNameChars();
                                                 var newCaption = invalidChar.Aggregate(photo.caption_render, (o, r) => (o.Replace(r.ToString(), string.Empty)));
@@ -426,22 +439,25 @@ namespace WeiboAlbumDownloader
                                         await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
                                     }
 
-                                    Image_Head?.Dispatcher.InvokeAsync(() =>
+                                    if (settings.ShowHeadImage)
                                     {
-                                        var bytes = File.ReadAllBytes(fileName);
-                                        MemoryStream ms = new MemoryStream(bytes);
-                                        BitmapImage bi = new BitmapImage();
-                                        bi.BeginInit();
-                                        bi.StreamSource = ms;
-                                        bi.EndInit();
+                                        Image_Head?.Dispatcher.InvokeAsync(() =>
+                                        {
+                                            var bytes = File.ReadAllBytes(fileName);
+                                            MemoryStream ms = new MemoryStream(bytes);
+                                            BitmapImage bi = new BitmapImage();
+                                            bi.BeginInit();
+                                            bi.StreamSource = ms;
+                                            bi.EndInit();
 
-                                        Image_Head.ImageSource = bi;
+                                            Image_Head.ImageSource = bi;
 
-                                        //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
-                                        TextBlock_UID!.Text = userId;
-                                        TextBlock_NickName.Text = nickName;
-                                        TextBlock_WeiboDesc.Text = weiboDesc;
-                                    });
+                                            //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
+                                            TextBlock_UID!.Text = userId;
+                                            TextBlock_NickName.Text = nickName;
+                                            TextBlock_WeiboDesc.Text = weiboDesc;
+                                        });
+                                    }
 
                                     cachedUserInfo = true;
                                 }
@@ -674,22 +690,26 @@ namespace WeiboAlbumDownloader
                                             await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
                                         }
 
-                                        Image_Head?.Dispatcher.InvokeAsync(() =>
+
+                                        if (settings.ShowHeadImage)
                                         {
-                                            var bytes = File.ReadAllBytes(fileName);
-                                            MemoryStream ms = new MemoryStream(bytes);
-                                            BitmapImage bi = new BitmapImage();
-                                            bi.BeginInit();
-                                            bi.StreamSource = ms;
-                                            bi.EndInit();
+                                            Image_Head?.Dispatcher.InvokeAsync(() =>
+                                            {
+                                                var bytes = File.ReadAllBytes(fileName);
+                                                MemoryStream ms = new MemoryStream(bytes);
+                                                BitmapImage bi = new BitmapImage();
+                                                bi.BeginInit();
+                                                bi.StreamSource = ms;
+                                                bi.EndInit();
 
-                                            Image_Head.ImageSource = bi;
+                                                Image_Head.ImageSource = bi;
 
-                                            //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
-                                            TextBlock_UID!.Text = userId;
-                                            TextBlock_NickName.Text = nickName;
-                                            TextBlock_WeiboDesc.Text = res?.Data?.Cards?[0]?.Mblog?.User?.Description!;
-                                        });
+                                                //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
+                                                TextBlock_UID!.Text = userId;
+                                                TextBlock_NickName.Text = nickName;
+                                                TextBlock_WeiboDesc.Text = res?.Data?.Cards?[0]?.Mblog?.User?.Description!;
+                                            });
+                                        }
 
                                         cachedUserInfo = true;
                                     }
@@ -727,6 +747,23 @@ namespace WeiboAlbumDownloader
                                         string format = "ddd MMM dd HH:mm:ss K yyyy"; // 定义日期格式
 
                                         timestamp = DateTime.ParseExact(card?.Mblog?.CreatedAt!, format, System.Globalization.CultureInfo.InvariantCulture);
+
+                                        //时间范围过滤，比设置日期早的跳过
+                                        if ((bool)settings?.EnableDatetimeRange)
+                                        {
+                                            if (card?.ProfileTypeId == "proweibotop_" && timestamp < settings?.StartDateTime)
+                                                continue;
+                                            else if (card?.ProfileTypeId == "proweibotop_" && timestamp >= settings?.StartDateTime)
+                                            {
+
+                                            }
+                                            else if (timestamp < settings?.StartDateTime)
+                                            {
+                                                AppendLog($"翻页到截至日期{settings?.StartDateTime}，停止下载");
+                                                return;
+                                            }
+                                        }
+
 
                                         if (card?.Mblog?.PicIds != null && (bool)card?.Mblog?.PicIds?.Any()!)
                                         {
@@ -1029,7 +1066,7 @@ namespace WeiboAlbumDownloader
             {
                 AppendLog("没有检测到PushPlus token，程序将不会推送消息到微信。如需推送，请登录https://www.pushplus.plus/设置", MessageEnum.Info);
             }
-            if (dataSource == WeiboDataSource.WeiboCn)
+            if (dataSource == WeiboDataSource.WeiboCn || dataSource == WeiboDataSource.WeiboCnMobile)
             {
                 cookie = settings.WeiboCnCookie;
             }
@@ -1115,16 +1152,6 @@ namespace WeiboAlbumDownloader
             isDownloading = false;
         }
 
-        private void OpenDir(object sender, RoutedEventArgs e)
-        {
-            Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
-        }
-
-        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
-        {
-            Process.Start("explorer.exe", e.Uri.AbsoluteUri);
-        }
-
         private void ListView_CopyLog(object sender, RoutedEventArgs e)
         {
             if (ListView_Messages.SelectedItem != null)
@@ -1158,6 +1185,11 @@ namespace WeiboAlbumDownloader
             }
         }
 
+        private void ListView_OpenDownloadFolder(object sender, RoutedEventArgs e)
+        {
+            Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
+        }
+
         private async void TextBox_WeiboId_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
@@ -1171,11 +1203,6 @@ namespace WeiboAlbumDownloader
             }
         }
 
-        private void OpenGithub(object sender, RoutedEventArgs e)
-        {
-            Process.Start(new ProcessStartInfo("https://github.com/hupo376787/WeiboAlbumDownloader") { UseShellExecute = true });
-        }
-
         private void OpenSettings(object sender, RoutedEventArgs e)
         {
             var set = new SettingsWindow();
@@ -1184,102 +1211,12 @@ namespace WeiboAlbumDownloader
             AppendLog("设置已更新");
         }
 
-        private void ComboBox_DataSource_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            dataSource = (WeiboDataSource)ComboBox_DataSource.SelectedIndex;
-            if (ComboBox_DataSource.SelectedIndex == 0)
-            {
-                AppendLog("通过weibo.cn获取的是用户的时间流，不过只能获取原创微博相册。", MessageEnum.Info);
-            }
-            else if (ComboBox_DataSource.SelectedIndex == 1)
-            {
-                AppendLog("通过m.weibo.cn获取的是用户的时间流，推荐使用。", MessageEnum.Info);
-            }
-            else if (ComboBox_DataSource.SelectedIndex == 2)
-            {
-                AppendLog("通过weibo.com获取的是相册信息，可以获取原创微博相册、头像相册、自拍相册等。少数用户存在获取失败的问题，怀疑是微博内部api不统一造成的。", MessageEnum.Info);
-            }
-            else if (ComboBox_DataSource.SelectedIndex == 3)
-            {
-                AppendLog("通过weibo.com获取的是用户的ajax相册，可以获取原创微博相册、头像相册、自拍相册等。但是获取不到博文信息，所以无法重命名图片和修改图片日期。貌似还获取不全。不推荐使用！！！", MessageEnum.Info);
-            }
-        }
-
         private void MicaWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Border_Head.Width = Border_Head.Height = Column_LeftGrid.ActualWidth * 0.8;
             Border_Head.CornerRadius = new CornerRadius(Column_LeftGrid.ActualWidth * 0.8);
         }
         #endregion
-
-        /// <summary>
-        /// 通过Selenium获取Cookie
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void GetCookie(object sender, RoutedEventArgs e)
-        {
-            string loginUrl = "https://passport.weibo.com/sso/signin?entry=wapsso&source=wapssowb&url=https://weibo.cn";
-            if (ComboBox_DataSource.SelectedIndex == 1)
-            {
-                loginUrl = "https://passport.weibo.com/sso/signin?entry=wapsso&source=wapsso&url=https://m.weibo.cn";
-            }
-            else if (ComboBox_DataSource.SelectedIndex == 2 || ComboBox_DataSource.SelectedIndex == 3)
-            {
-                loginUrl = "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog&url=https://weibo.com/";
-            }
-
-            IWebDriver driver = new ChromeDriver();
-            driver.Url = loginUrl;
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromHours(8))
-            {
-                PollingInterval = TimeSpan.FromMilliseconds(500),
-            };
-            wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
-            //wait.Until(d => d.FindElement(By.LinkText("title")));
-
-            // 等待页面加载完成并获取页面标题
-            wait.Until(d => d.Title.Equals("微博 – 随时随地发现新鲜事") || d.Title.Equals("我的首页") || d.Title.Equals("微博"));
-
-            // 获取页面标题并进行检查
-            string pageTitle = driver.Title;
-            if (pageTitle.Equals("微博 – 随时随地发现新鲜事") || pageTitle.Equals("我的首页") || pageTitle.Equals("微博"))
-            {
-                AppendLog("扫码登陆成功", MessageEnum.Success);
-                // 获取所有的 Cookie 对象
-                IReadOnlyCollection<OpenQA.Selenium.Cookie> cookies = driver.Manage().Cookies.AllCookies;
-
-                // 将 Cookie 对象转换为一个字符串，格式类似于 HTTP 请求头的 Cookie 字符串
-                string cookie = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
-
-                // 打印 Cookie 字符串
-                Debug.WriteLine(cookie);
-
-                string settingsContent = File.ReadAllText("Settings.json");
-                settings = JsonConvert.DeserializeObject<SettingsModel>(settingsContent);
-                if (settings == null)
-                {
-                    AppendLog("Settings.json文件缺失，请重新下载程序", MessageEnum.Error);
-                    return;
-                }
-                if (dataSource == WeiboDataSource.WeiboCn)
-                {
-                    settings.WeiboCnCookie = cookie;
-                }
-                else
-                {
-                    settings.WeiboComCookie = cookie;
-                }
-                File.WriteAllText("Settings.json", JsonConvert.SerializeObject(settings, Formatting.Indented));
-            }
-            else
-            {
-                AppendLog("未登录");
-            }
-
-            // 程序结束时，手动关闭浏览器
-            driver.Quit();
-        }
 
     }
 }

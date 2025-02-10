@@ -27,86 +27,57 @@
       <RowDefinition />
     </Grid.RowDefinitions>
 
-    <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
-      <TextBlock
-        Margin="8,0,0,0"
-        VerticalAlignment="Center"
-        Text="数据源" />
-      <ComboBox
-        x:Name="ComboBox_DataSource"
-        Margin="8"
-        SelectionChanged="ComboBox_DataSource_SelectionChanged"
-        ToolTip="不懂的话选择默认即可" />
-      <mica:Button
-        Width="160"
-        Height="32"
-        Margin="8,0"
-        Background="LightYellow"
-        Click="GetCookie"
-        ToolTip="打开手机版微博，扫描二维码确认登陆">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/cookie.png" />
-          <TextBlock
-            Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="扫码获取Cookie" />
-        </StackPanel>
-      </mica:Button>
+    <Grid Margin="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
       <mica:TextBox
         x:Name="TextBox_WeiboId"
-        Width="140"
-        Height="32"
-        Margin="8,0"
-        KeyUp="TextBox_WeiboId_KeyUp"
-        ToolTip="填写uid进行单用户下载或者uidList.txt进行批量下载"
-        Watermark="uid" />
-      <mica:Button
-        Width="110"
         Height="32"
         Margin="8,0,0,0"
-        Click="StartDownLoad"
-        CornerRadius="2 0 0 2"
-        ToolTip="开始/停止下载，停止下载的时候可能有延后，因为需要等待分页任务下载完才能停">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/cloud-computing.png" />
-          <TextBlock
-            x:Name="tbDownload"
-            Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="开始下载" />
-        </StackPanel>
-      </mica:Button>
+        KeyUp="TextBox_WeiboId_KeyUp"
+        ToolTip="填写uid进行单用户下载或者uidList.txt进行批量下载"
+        Watermark="微博uid" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal">
+        <mica:Button
+          Width="110"
+          Height="32"
+          Margin="8,0,0,0"
+          Click="StartDownLoad"
+          CornerRadius="2 0 0 2"
+          ToolTip="开始/停止下载，停止下载的时候可能有延后，因为需要等待分页任务下载完才能停">
+          <StackPanel Orientation="Horizontal">
+            <Image Width="18" Source="/Assets/cloud-computing.png" />
+            <TextBlock
+              x:Name="tbDownload"
+              Margin="8,0,0,0"
+              VerticalAlignment="Center"
+              Text="开始下载" />
+          </StackPanel>
+        </mica:Button>
+        <mica:Button
+          Grid.Column="1"
+          Width="30"
+          Height="32"
+          Margin="-2,0,0,0"
+          Click="BatchDownLoad"
+          CornerRadius="0 2 2 0"
+          FontSize="10"
+          ToolTip="自动循环uidList.txt中所有用户，执行批量下载任务">
+          <StackPanel Orientation="Horizontal">
+            <Image Width="18" Source="/Assets/batch.png" />
+            <TextBlock
+              Margin="8,0,0,0"
+              VerticalAlignment="Center"
+              Text="批量&#x0a;下载"
+              Visibility="Collapsed" />
+          </StackPanel>
+        </mica:Button>
+      </StackPanel>
       <mica:Button
-        Width="30"
-        Height="32"
-        Margin="-2,0,0,0"
-        Click="BatchDownLoad"
-        CornerRadius="0 2 2 0"
-        FontSize="10"
-        ToolTip="自动循环uidList.txt中所有用户，执行批量下载任务">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/batch.png" />
-          <TextBlock
-            Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="批量&#x0a;下载"
-            Visibility="Collapsed" />
-        </StackPanel>
-      </mica:Button>
-      <mica:Button
-        Width="140"
-        Height="32"
-        Margin="8,0"
-        Click="OpenDir">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="18" Source="/Assets/download.png" />
-          <TextBlock
-            Margin="8,0,0,0"
-            VerticalAlignment="Center"
-            Text="打开下载目录" />
-        </StackPanel>
-      </mica:Button>
-      <mica:Button
+        Grid.Column="2"
         Width="64"
         Height="32"
         Margin="8,0"
@@ -116,32 +87,7 @@
           <Image Width="18" Source="/Assets/settings.png" />
         </StackPanel>
       </mica:Button>
-      <mica:Button
-        Width="64"
-        Height="32"
-        Margin="8,0"
-        Click="OpenGithub"
-        ToolTip="Fork me on Github">
-        <StackPanel Orientation="Horizontal">
-          <Image Width="20" Source="/Assets/github.png" />
-        </StackPanel>
-      </mica:Button>
-    </StackPanel>
-
-    <TextBlock
-      Grid.Row="1"
-      Margin="8"
-      VerticalAlignment="Center"
-      Foreground="Gray"
-      TextWrapping="Wrap">
-      <Run Text="PC打开" />
-      <Hyperlink NavigateUri="https://weibo.com/" RequestNavigate="Hyperlink_RequestNavigate">weibo.com</Hyperlink>
-      <Run Text="，点击某一用户头像，进入主页。uid就是地址栏中的最后一串数字，比如https://weibo.com/u/1000000000。&#x0a;Cookie可以通过点击上方按钮打开页面扫码获取，或者按F12进入控制台，网络-全部，在名称栏选择uid，标头-请求标头-Cookie。右键复制后请填入到Seetings.json。" />
-      <Hyperlink NavigateUri="https://weibo.com/" RequestNavigate="Hyperlink_RequestNavigate">weibo.com</Hyperlink>
-      <Run Text="和" />
-      <Hyperlink NavigateUri="https://weibo.cn" RequestNavigate="Hyperlink_RequestNavigate">weibo.cn</Hyperlink>
-      <Run Text="cookie不一样，请注意区分。" />
-    </TextBlock>
+    </Grid>
 
     <Grid Grid.Row="2">
       <Grid.ColumnDefinitions>
@@ -201,6 +147,7 @@
             <MenuItem Click="ListView_CopyLog" Header="复制" />
             <MenuItem Click="ListView_ClearLog" Header="清空" />
             <MenuItem Click="ListView_ExportLog" Header="导出" />
+            <MenuItem Click="ListView_OpenDownloadFolder" Header="打开下载文件目录" />
           </ContextMenu>
         </ListView.ContextMenu>
         <ListView.ItemTemplate>
