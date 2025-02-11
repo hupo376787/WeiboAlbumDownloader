@@ -439,9 +439,9 @@ namespace WeiboAlbumDownloader
                                         await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
                                     }
 
-                                    if (settings.ShowHeadImage)
+                                    Image_Head?.Dispatcher.InvokeAsync(() =>
                                     {
-                                        Image_Head?.Dispatcher.InvokeAsync(() =>
+                                        if (settings.ShowHeadImage)
                                         {
                                             var bytes = File.ReadAllBytes(fileName);
                                             MemoryStream ms = new MemoryStream(bytes);
@@ -453,11 +453,11 @@ namespace WeiboAlbumDownloader
                                             Image_Head.ImageSource = bi;
 
                                             //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
-                                            TextBlock_UID!.Text = userId;
-                                            TextBlock_NickName.Text = nickName;
-                                            TextBlock_WeiboDesc.Text = weiboDesc;
-                                        });
-                                    }
+                                        }
+                                        TextBlock_UID!.Text = userId;
+                                        TextBlock_NickName.Text = nickName;
+                                        TextBlock_WeiboDesc.Text = weiboDesc;
+                                    });
 
                                     cachedUserInfo = true;
                                 }
@@ -691,9 +691,9 @@ namespace WeiboAlbumDownloader
                                         }
 
 
-                                        if (settings.ShowHeadImage)
+                                        Image_Head?.Dispatcher.InvokeAsync(() =>
                                         {
-                                            Image_Head?.Dispatcher.InvokeAsync(() =>
+                                            if (settings.ShowHeadImage)
                                             {
                                                 var bytes = File.ReadAllBytes(fileName);
                                                 MemoryStream ms = new MemoryStream(bytes);
@@ -705,11 +705,11 @@ namespace WeiboAlbumDownloader
                                                 Image_Head.ImageSource = bi;
 
                                                 //Image_Head.ImageSource = new BitmapImage(new Uri(fileName));
-                                                TextBlock_UID!.Text = userId;
-                                                TextBlock_NickName.Text = nickName;
-                                                TextBlock_WeiboDesc.Text = res?.Data?.Cards?[0]?.Mblog?.User?.Description!;
-                                            });
-                                        }
+                                            }
+                                            TextBlock_UID!.Text = userId;
+                                            TextBlock_NickName.Text = nickName;
+                                            TextBlock_WeiboDesc.Text = res?.Data?.Cards?[0]?.Mblog?.User?.Description!;
+                                        });
 
                                         cachedUserInfo = true;
                                     }
