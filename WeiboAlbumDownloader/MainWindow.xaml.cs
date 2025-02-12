@@ -1076,7 +1076,7 @@ namespace WeiboAlbumDownloader
             }
             if (string.IsNullOrEmpty(cookie))
             {
-                AppendLog("没有检测到cookie，程序将无法抓取数据", MessageEnum.Error);
+                AppendLog("没有检测到cookie，程序将无法抓取数据，请在设置里面扫码获取", MessageEnum.Error);
                 return;
             }
             if (!settings.EnableCrontab)
