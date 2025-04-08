@@ -59,8 +59,8 @@ namespace WeiboAlbumDownloader.Helpers
                         var invalidChar = Path.GetInvalidFileNameChars();
                         var newFileName = invalidChar.Aggregate(Path.GetFileName(fileName), (o, r) => (o.Replace(r.ToString(), string.Empty)));
 
-                        if (newFileName.Length > 240)
-                            newFileName = GetUniqueFileName(newFileName.Substring(0, 240) + Path.GetExtension(newFileName));
+                        if (newFileName.Length > 200)
+                            newFileName = GetUniqueFileName(newFileName.Substring(0, 200) + Path.GetExtension(newFileName));
                         else
                             newFileName = GetUniqueFileName(fileName);
 

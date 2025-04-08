@@ -8,7 +8,7 @@
   xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
   Title="设置"
   Width="800"
-  Height="600"
+  Height="586"
   FontFamily="微软雅黑"
   Icon="/weibo.ico"
   ResizeMode="NoResize"
@@ -151,70 +151,83 @@
           VerticalAlignment="Center"
           Foreground="Gray"
           Text="下载设置" />
-        <mica:ToggleSwitch
-          x:Name="ToggleSwitch_ShowHeadImage"
-          Margin="16,8,0,0"
-          Content="显示作者头像"
-          Foreground="Gray" />
-        <StackPanel Margin="8,0,0,0" Orientation="Horizontal">
+        <UniformGrid Margin="16,8,0,0" Columns="2">
           <mica:ToggleSwitch
-            x:Name="ToggleSwitch_Crontab"
-            Margin="8,8,0,0"
-            Checked="ToggleSwitch_Checked"
-            Content="启用定时下载"
-            Foreground="Gray"
-            ToolTip="定时任务会在设置的Crontab时间启动，自动循环uidList.txt中所有用户，执行下载任务"
-            Unchecked="ToggleSwitch_Unchecked" />
-          <mica:TextBox
-            x:Name="TextBox_Crontab"
-            Width="628"
-            Height="32"
-            Margin="16,8,0,0"
-            TextWrapping="Wrap"
-            Watermark="例如，14 2 * * *，代表每天凌晨2点14分开始下载" />
-        </StackPanel>
-
-        <StackPanel Margin="8,0,0,0" Orientation="Horizontal">
-          <mica:ToggleSwitch
-            x:Name="ToggleSwitch_DatetimeRange"
-            Margin="8,8,0,0"
-            Checked="ToggleSwitch_DatetimeRangeChecked"
-            Content="启用时间范围"
-            Foreground="Gray"
-            ToolTip="开启后仅下载指定时间范围内的微博数据"
-            Unchecked="ToggleSwitch_DatetimeRangeUnchecked" />
-          <TextBlock
-            Margin="16,13,0,0"
-            FontSize="13"
-            Foreground="Gray"
-            Text="自" />
-          <DatePicker
-            x:Name="DatePicker_Start"
-            Width="100"
-            Margin="2,12,0,0"
-            BorderThickness="0"
+            x:Name="ToggleSwitch_ShowHeadImage"
+            Content="显示作者头像"
             Foreground="Gray" />
-          <TextBlock
-            Margin="2,13,0,0"
-            FontSize="13"
-            Foreground="Gray"
-            Text="至最新日期" />
-        </StackPanel>
+          <mica:ToggleSwitch
+            x:Name="ToggleSwitch_EnableDownloadVideo"
+            Content="下载视频"
+            Foreground="Gray" />
 
-        <StackPanel Margin="8,0,0,0" Orientation="Horizontal">
-          <TextBlock
-            Margin="8,8,8,0"
-            VerticalAlignment="Center"
+          <StackPanel Orientation="Horizontal">
+            <mica:ToggleSwitch
+              x:Name="ToggleSwitch_DatetimeRange"
+              Margin="0,8,0,0"
+              Checked="ToggleSwitch_DatetimeRangeChecked"
+              Content="启用时间范围"
+              Foreground="Gray"
+              ToolTip="开启后仅下载指定时间范围内的微博数据"
+              Unchecked="ToggleSwitch_DatetimeRangeUnchecked" />
+            <TextBlock
+              Margin="16,14,0,0"
+              FontSize="13"
+              Foreground="Gray"
+              Text="自" />
+            <DatePicker
+              x:Name="DatePicker_Start"
+              Width="100"
+              Margin="2,12,0,0"
+              BorderThickness="0"
+              Foreground="Gray" />
+            <TextBlock
+              Margin="2,13,0,0"
+              FontSize="13"
+              Foreground="Gray"
+              Text="至最新日期" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal">
+            <mica:ToggleSwitch
+              x:Name="ToggleSwitch_Crontab"
+              Margin="0,8,0,0"
+              Checked="ToggleSwitch_Checked"
+              Content="启用定时下载"
+              Foreground="Gray"
+              ToolTip="定时任务会在设置的Crontab时间启动，自动循环uidList.txt中所有用户，执行下载任务"
+              Unchecked="ToggleSwitch_Unchecked" />
+            <mica:TextBox
+              x:Name="TextBox_Crontab"
+              Width="160"
+              Height="32"
+              Margin="16,8,0,0"
+              TextWrapping="Wrap"
+              ToolTip="例如，14 2 * * *，代表每天凌晨2点14分开始下载" />
+          </StackPanel>
+
+          <mica:ToggleSwitch
+            x:Name="ToggleSwitch_EnableShortenName"
+            Margin="0,8,0,0"
+            Content="精简图片命名"
             Foreground="Gray"
-            Text="自动跳到下一个用户下载的计数" />
-          <mica:TextBox
-            x:Name="TextBox_SkipCount"
-            Width="586"
-            Height="32"
-            Margin="8,8,0,0"
-            TextWrapping="Wrap"
-            Watermark="下载用户的文件如果在本地已经存在设置的个数，软件就认为当前用户已经下载完成" />
-        </StackPanel>
+            ToolTip="启用后图片仅以日期+编号命名，文件名中不在包含博文内容" />
+
+          <StackPanel Orientation="Horizontal">
+            <TextBlock
+              Margin="0,8,0,0"
+              VerticalAlignment="Center"
+              Foreground="Gray"
+              Text="自动跳到下一个用户下载的计数" />
+            <mica:TextBox
+              x:Name="TextBox_SkipCount"
+              Width="126"
+              Height="32"
+              Margin="8,8,0,0"
+              TextWrapping="Wrap"
+              ToolTip="下载用户的文件如果在本地已经存在设置的个数，软件就认为当前用户已经下载完成" />
+          </StackPanel>
+        </UniformGrid>
 
         <StackPanel
           Margin="0,16,0,0"

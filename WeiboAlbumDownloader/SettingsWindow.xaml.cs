@@ -48,6 +48,8 @@ namespace WeiboAlbumDownloader
                 TextBox_WeiboComCookie.Text = settings?.WeiboComCookie;
                 TextBox_PushPlusToken.Text = settings?.PushPlusToken;
                 ToggleSwitch_ShowHeadImage.IsChecked = settings?.ShowHeadImage;
+                ToggleSwitch_EnableDownloadVideo.IsChecked = settings?.EnableDownloadVideo;
+                ToggleSwitch_EnableShortenName.IsChecked = settings?.EnableShortenName;
                 ToggleSwitch_Crontab.IsChecked = settings?.EnableCrontab;
                 TextBox_Crontab.Text = settings?.Crontab;
                 TextBox_SkipCount.Text = settings?.CountDownloadedSkipToNextUser.ToString();
@@ -115,6 +117,8 @@ namespace WeiboAlbumDownloader
                 WeiboComCookie = TextBox_WeiboComCookie.Text,
                 PushPlusToken = TextBox_PushPlusToken.Text,
                 ShowHeadImage = (bool)ToggleSwitch_ShowHeadImage.IsChecked!,
+                EnableDownloadVideo = (bool)ToggleSwitch_EnableDownloadVideo.IsChecked!,
+                EnableShortenName = (bool)ToggleSwitch_EnableShortenName.IsChecked!,
                 EnableCrontab = (bool)ToggleSwitch_Crontab.IsChecked!,
                 Crontab = TextBox_Crontab.Text,
                 CountDownloadedSkipToNextUser = string.IsNullOrEmpty(TextBox_SkipCount.Text) ? 20 : Convert.ToInt32(TextBox_SkipCount.Text),

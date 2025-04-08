@@ -24,5 +24,10 @@ namespace WeiboAlbumDownloader.Models
         //是否开启时间范围
         public bool EnableDatetimeRange { get; set; } = false;
         public DateTime? StartDateTime { get; set; }
+        //开启下载视频功能，默认开启
+        public bool EnableDownloadVideo { get; set; } = true;
+        //启用后图片仅以日期+编号命名，文件名中不在包含博文内容
+        public bool EnableShortenName { get; set; } = false;
+
     }
 }

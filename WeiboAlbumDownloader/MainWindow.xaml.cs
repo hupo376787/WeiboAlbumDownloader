@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 5.1;
+        public static double currentVersion = 5.2;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -562,7 +562,7 @@ namespace WeiboAlbumDownloader
                                             }
                                         }
                                     }
-                                    else if (picType == PicEnum.Video)
+                                    else if (picType == PicEnum.Video && settings!.EnableDownloadVideo)
                                     {
                                         try
                                         {
@@ -812,7 +812,7 @@ namespace WeiboAlbumDownloader
 
                                         //替换非法字符
                                         var invalidChar = Path.GetInvalidFileNameChars();
-                                        var newCaption = invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
+                                        var newCaption = settings!.EnableShortenName ? "" : invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
                                         var fileName = downloadFolder + "//" + personalFolder + "//" + "//"
                                             + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption;
                                         Debug.WriteLine(fileName);
@@ -861,89 +861,95 @@ namespace WeiboAlbumDownloader
                                             }
                                             id++;
                                         }
-                                        foreach (var item in originalVideos)
+                                        if (settings!.EnableDownloadVideo)
                                         {
-                                            if (isSkip)
-                                                break;
-
-                                            if (string.IsNullOrEmpty(item))
-                                                continue;
-                                            var fileNamee = fileName + $"_{id}.mp4";
-                                            //已存在的文件超过设置值，判定该用户下载过了
-                                            if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            foreach (var item in originalVideos)
                                             {
-                                                AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
-                                                isSkip = true;
-                                            }
+                                                if (isSkip)
+                                                    break;
 
-                                            //已经下载过的跳过
-                                            if (File.Exists(fileNamee))
-                                            {
-                                                AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
-                                                countDownloadedSkipToNextUser++;
-                                                await Task.Delay(500);
-                                                continue;
-                                            }
+                                                if (string.IsNullOrEmpty(item))
+                                                    continue;
+                                                var fileNamee = fileName + $"_{id}.mp4";
+                                                //已存在的文件超过设置值，判定该用户下载过了
+                                                if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                                {
+                                                    AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                    isSkip = true;
+                                                }
 
-                                            //传入图片/视频的名字，开始下载图片/视频
-                                            try
-                                            {
-                                                await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
+                                                //已经下载过的跳过
+                                                if (File.Exists(fileNamee))
+                                                {
+                                                    AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
+                                                    countDownloadedSkipToNextUser++;
+                                                    await Task.Delay(500);
+                                                    continue;
+                                                }
 
-                                                //修改文件日期时间为发博的时间
-                                                File.SetCreationTime(fileNamee, timestamp);
-                                                File.SetLastWriteTime(fileNamee, timestamp);
-                                                File.SetLastAccessTime(fileNamee, timestamp);
+                                                //传入图片/视频的名字，开始下载图片/视频
+                                                try
+                                                {
+                                                    await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
 
-                                                AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                    //修改文件日期时间为发博的时间
+                                                    File.SetCreationTime(fileNamee, timestamp);
+                                                    File.SetLastWriteTime(fileNamee, timestamp);
+                                                    File.SetLastAccessTime(fileNamee, timestamp);
+
+                                                    AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
+                                                }
+                                                id++;
                                             }
-                                            catch (Exception ex)
-                                            {
-                                                AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
-                                            }
-                                            id++;
                                         }
-                                        foreach (var item in originalLivePhotos)
+                                        if (settings!.EnableDownloadVideo)
                                         {
-                                            if (isSkip)
-                                                break;
-
-                                            if (string.IsNullOrEmpty(item))
-                                                continue;
-                                            var fileNamee = fileName + $"_{id}.mov";
-                                            //已存在的文件超过设置值，判定该用户下载过了
-                                            if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                            foreach (var item in originalLivePhotos)
                                             {
-                                                AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
-                                                isSkip = true;
-                                            }
+                                                if (isSkip)
+                                                    break;
 
-                                            //已经下载过的跳过
-                                            if (File.Exists(fileNamee))
-                                            {
-                                                AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
-                                                countDownloadedSkipToNextUser++;
-                                                await Task.Delay(500);
-                                                continue;
-                                            }
+                                                if (string.IsNullOrEmpty(item))
+                                                    continue;
+                                                var fileNamee = fileName + $"_{id}.mov";
+                                                //已存在的文件超过设置值，判定该用户下载过了
+                                                if (settings!.CountDownloadedSkipToNextUser > 0 && countDownloadedSkipToNextUser > settings.CountDownloadedSkipToNextUser)
+                                                {
+                                                    AppendLog($"已存在的文件{countDownloadedSkipToNextUser}超过设置值{settings.CountDownloadedSkipToNextUser}，跳到下一个用户", MessageEnum.Info);
+                                                    isSkip = true;
+                                                }
 
-                                            //传入图片/视频的名字，开始下载图片/视频
-                                            try
-                                            {
-                                                await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
+                                                //已经下载过的跳过
+                                                if (File.Exists(fileNamee))
+                                                {
+                                                    AppendLog("文件已存在，跳过下载" + Path.GetFullPath(fileNamee), MessageEnum.Warning);
+                                                    countDownloadedSkipToNextUser++;
+                                                    await Task.Delay(500);
+                                                    continue;
+                                                }
 
-                                                //修改文件日期时间为发博的时间
-                                                File.SetCreationTime(fileNamee, timestamp);
-                                                File.SetLastWriteTime(fileNamee, timestamp);
-                                                File.SetLastAccessTime(fileNamee, timestamp);
+                                                //传入图片/视频的名字，开始下载图片/视频
+                                                try
+                                                {
+                                                    await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
 
-                                                AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                    //修改文件日期时间为发博的时间
+                                                    File.SetCreationTime(fileNamee, timestamp);
+                                                    File.SetLastWriteTime(fileNamee, timestamp);
+                                                    File.SetLastAccessTime(fileNamee, timestamp);
+
+                                                    AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
+                                                }
+                                                id++;
                                             }
-                                            catch (Exception ex)
-                                            {
-                                                AppendLog($"文件下载失败，原始url：{item}，下载路径{fileNamee}", MessageEnum.Error);
-                                            }
-                                            id++;
                                         }
                                     }
 
