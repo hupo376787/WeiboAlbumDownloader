@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 5.2;
+        public static double currentVersion = 5.3;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -396,7 +396,7 @@ namespace WeiboAlbumDownloader
                                 //filter，0-全部；1-原创；2-图片
                                 //https://weibo.cn/xxxxxxxxxxxxx?page=2
                                 //https://weibo.cn/xxxxxxxxxxxxx/profile?page=2
-                                string url = $"https://weibo.cn/{userId}?page={page}&filter=1";
+                                string url = $"https://weibo.cn/{userId}/profile?page={page}&filter=1";
                                 string text = await HttpHelper.GetAsync<string>(url, dataSource, cookie!);
                                 var doc = new HtmlDocument();
                                 doc.LoadHtml(text);
@@ -407,7 +407,7 @@ namespace WeiboAlbumDownloader
                                     var totalPageHtml = doc.DocumentNode.Descendants("input").Where(x => x.Attributes["type"]?.Value == "hidden").ToList();
                                     if (totalPageHtml.Count > 0)
                                     {
-                                        totalPage = Convert.ToInt32(totalPageHtml[0].Attributes["value"].Value);
+                                        totalPage = Convert.ToInt32(totalPageHtml[totalPageHtml.Count - 1].Attributes["value"].Value);
                                         AppendLog($"获取到{totalPage}页数据", MessageEnum.Info);
                                     }
                                 }
@@ -424,9 +424,14 @@ namespace WeiboAlbumDownloader
                                     var userInfoXmlString = doc.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "u").ToList()?[0].OuterHtml;
                                     var docUser = new HtmlDocument();
                                     docUser.LoadHtml(userInfoXmlString);
-                                    string temp = docUser.DocumentNode.Descendants("img").Where(x => x.Attributes["alt"]?.Value == "头像").ToList()?[0].Attributes["src"].Value!;
-                                    nickName = docUser.DocumentNode.Descendants("span").Where(x => x.Attributes["class"]?.Value == "ctt").ToList()?[0].InnerText.Split("&nbsp;")[0]!;
-                                    using (File.Create(downloadFolder + userId + "//" + nickName)) { }
+                                    string temp = docUser.DocumentNode
+                                        .Descendants("img")
+                                        .FirstOrDefault(x => x.Attributes["alt"]?.Value == "头像")
+                                        ?.Attributes["src"]?.Value
+                                        ?? "";
+                                    nickName = docUser.DocumentNode.Descendants("span").FirstOrDefault(x => x.Attributes["class"]?.Value == "ctt")?.InnerText.Split("&nbsp;")[0] ?? "";
+                                    if (!string.IsNullOrEmpty(nickName))
+                                        using (File.Create(downloadFolder + userId + "//" + nickName)) { }
 
                                     var desc = docUser.DocumentNode.Descendants("div").Where(x => x.Attributes["class"]?.Value == "tip2").ToList()?[0].InnerText.Split("&nbsp;");
                                     string weiboDesc = string.Join(" ", desc!);
@@ -434,14 +439,14 @@ namespace WeiboAlbumDownloader
                                     headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(temp).Split("?")[0];
                                     var fileName = downloadFolder + userId + "//" + Path.GetFileName(headUrl);
                                     //下载头像
-                                    if (!File.Exists(fileName))
+                                    if (!File.Exists(fileName) && temp != "")
                                     {
                                         await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
                                     }
 
                                     Image_Head?.Dispatcher.InvokeAsync(() =>
                                     {
-                                        if (settings.ShowHeadImage)
+                                        if (settings.ShowHeadImage && temp != "")
                                         {
                                             var bytes = File.ReadAllBytes(fileName);
                                             MemoryStream ms = new MemoryStream(bytes);
@@ -490,7 +495,19 @@ namespace WeiboAlbumDownloader
                                     var temp = doc1.DocumentNode.Descendants("span").Where(x => x.Attributes["class"]?.Value == "ct").ToList()[0].InnerText;
                                     var sourceDevice = temp.Split("&nbsp;").Length > 1 ? temp.Split("&nbsp;")[1] : "";
                                     //发布时间
-                                    var timestamp = DateTime.Parse(temp.Split("&nbsp;")[0].Replace("今天", ""));
+                                    //15分钟前&nbsp;来自iPhone客户端
+                                    string pattern = @"(\d+分钟前|今天)";
+                                    Regex regex = new Regex(pattern);
+                                    DateTime timestamp = DateTime.Now;
+                                    if (temp.Contains("分钟前"))
+                                    {
+                                        int minute = int.Parse(temp.Split("&nbsp;")[0].Replace("分钟前", ""));
+                                        timestamp = DateTime.Now.AddMinutes(-1 * minute);
+                                    }
+                                    else
+                                    {
+                                        timestamp = DateTime.Parse(temp.Split("&nbsp;")[0].Replace("今天", ""));
+                                    }
 
                                     //图片列表链接
                                     string photoListUrl = string.Empty;
@@ -518,21 +535,21 @@ namespace WeiboAlbumDownloader
                                         }
                                         else if (item.InnerText.Contains("赞"))
                                         {
-                                            likeCount = Convert.ToInt32(item.InnerText.Replace("赞[", "").Replace("]", ""));
+                                            //likeCount = Convert.ToInt32(item.InnerText.Replace("赞[", "").Replace("]", ""));
                                         }
                                         else if (item.InnerText.Contains("转发"))
                                         {
-                                            repostCount = Convert.ToInt32(item.InnerText.Replace("转发[", "").Replace("]", ""));
+                                            //repostCount = Convert.ToInt32(item.InnerText.Replace("转发[", "").Replace("]", ""));
                                         }
                                         else if (item.InnerText.Contains("评论"))
                                         {
-                                            commentCount = Convert.ToInt32(item.InnerText.Replace("评论[", "").Replace("]", ""));
+                                            //commentCount = Convert.ToInt32(item.InnerText.Replace("评论[", "").Replace("]", ""));
                                         }
                                     }
                                     //如果已赞，那么获取方式是下面的
                                     try
                                     {
-                                        likeCount = Convert.ToInt32(doc1.DocumentNode.Descendants("span").Where(x => x.Attributes["class"]?.Value == "cmt").ToList()[0].InnerText.Replace("已赞[", "").Replace("]", ""));
+                                        //likeCount = Convert.ToInt32(doc1.DocumentNode.Descendants("span").Where(x => x.Attributes["class"]?.Value == "cmt").ToList()[0].InnerText.Replace("已赞[", "").Replace("]", ""));
                                     }
                                     catch { }
 
@@ -590,7 +607,7 @@ namespace WeiboAlbumDownloader
 
                                         //替换非法字符
                                         var invalidChar = Path.GetInvalidFileNameChars();
-                                        var newCaption = invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
+                                        var newCaption = settings!.EnableShortenName ? "" : invalidChar.Aggregate(weiboContent, (o, r) => (o.Replace(r.ToString(), string.Empty)));
                                         var fileName = downloadFolder + userId + "//" + "微博配图" + "//"
                                             + timestamp.ToString("yyyy-MM-dd HH_mm_ss") + newCaption + "_" + photoCount;
                                         //后缀名区分图片/视频
@@ -1215,6 +1232,7 @@ namespace WeiboAlbumDownloader
             set.Owner = this;
             set.ShowDialog();
             AppendLog("设置已更新");
+            InitSettingsData();
         }
 
         private void MicaWindow_SizeChanged(object sender, SizeChangedEventArgs e)

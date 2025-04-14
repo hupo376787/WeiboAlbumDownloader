@@ -35,14 +35,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CronExpressionDescriptor" Version="2.32.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.56" />
-    <PackageReference Include="MicaWPF" Version="6.2.1" />
+    <PackageReference Include="CronExpressionDescriptor" Version="2.40.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.0" />
+    <PackageReference Include="MicaWPF" Version="6.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.25.0" />
-    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="129.0.6668.10000" />
-    <PackageReference Include="Sentry" Version="4.12.1" />
-    <PackageReference Include="TimeCrontab" Version="3.3.6" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.31.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="135.0.7049.8400" />
+    <PackageReference Include="Sentry" Version="5.5.1" />
+    <PackageReference Include="TimeCrontab" Version="3.6.0" />
   </ItemGroup>
 
 </Project>
