@@ -2,17 +2,20 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using WeiboAlbumDownloader.Enums;
+using WeiboAlbumDownloader.Models;
 
 namespace WeiboAlbumDownloader.Helpers
 {
     public class HttpHelper
     {
-        static HttpWebRequest myHttpWebRequest;
+        static HttpClient client;
         /// <summary>
         /// 
         /// </summary>
@@ -24,62 +27,81 @@ namespace WeiboAlbumDownloader.Helpers
         {
             try
             {
-                myHttpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                myHttpWebRequest.AllowAutoRedirect = true;
-                //加上UA就请求失败，是啥原因
-                //myHttpWebRequest.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-                myHttpWebRequest.CookieContainer = new CookieContainer();
-
-                var array = cookie.Split(";");
-                foreach (var item in array)
+                var handler = new HttpClientHandler()
                 {
-                    if (string.IsNullOrEmpty(item.Trim()) || item.Trim().StartsWith("UOR")) { continue; }
-
-                    var temp = item.Split("=");
-                    //myHttpWebRequest.CookieContainer.Add(
-                    //    new Cookie("login_sid_t", "f896b3349c182456456481313fbb262") { Domain = "weibo.com" }
-                    //    );
-                    if (dataSource == WeiboDataSource.WeiboCn)
-                    {
-                        myHttpWebRequest.CookieContainer.Add(new Cookie(temp[0].Trim(), temp[1].Trim()) { Domain = "weibo.cn" });
-                    }
-                    else
-                    {
-                        myHttpWebRequest.CookieContainer.Add(new Cookie(temp[0].Trim(), temp[1].Trim()) { Domain = "weibo.com" });
-                    }
+                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+                };
+                client = new HttpClient(handler);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("Referer", "https://m.weibo.cn/");
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    //request.Headers.Add("Host", "m.weibo.cn");
+                    //request.Headers.Add("Connection", "keep-alive");
+                    //request.Headers.Add("Pragma", "no-cache");
+                    //request.Headers.Add("Cache-Control", "no-cache");
+                    //request.Headers.Add("Sec-Ch-Ua-Platform", "\"Windows\"");
+                    request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36");
+                    request.Headers.Add("Accept", "application/json, text/plain, */*");
+                    request.Headers.Add("Accept-Encoding", "gzip, deflate, br");
+                    request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.9");
+                    request.Headers.Add("Cookie", cookie);
                 }
 
-                using (HttpWebResponse lxResponse = (HttpWebResponse)myHttpWebRequest.GetResponse())
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var contentEncoding = response.Content.Headers.ContentEncoding.ToString();
+                var contentType = response.Content.Headers.ContentType.ToString();
+
+                Debug.WriteLine("Content-Encoding: " + contentEncoding);
+                Debug.WriteLine("Content-Type: " + contentType);
+
+                string responseBody;
+                // 检查是否是压缩数据并手动解压
+                if (contentEncoding.Contains("gzip"))
                 {
-                    var stream = lxResponse.GetResponseStream();
-                    StreamReader reader = new StreamReader(stream);
-
-                    if (!string.IsNullOrEmpty(fileName))
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var decompressedStream = new GZipStream(stream, CompressionMode.Decompress))
+                    using (var reader = new StreamReader(decompressedStream))
                     {
-                        var invalidChar = Path.GetInvalidFileNameChars();
-                        var newFileName = invalidChar.Aggregate(Path.GetFileName(fileName), (o, r) => (o.Replace(r.ToString(), string.Empty)));
-
-                        if (newFileName.Length > 200)
-                            newFileName = GetUniqueFileName(newFileName.Substring(0, 200) + Path.GetExtension(newFileName));
-                        else
-                            newFileName = GetUniqueFileName(fileName);
-
-                        FileStream lxFS = File.Create(newFileName);
-                        await stream.CopyToAsync(lxFS);
-                        lxFS.Close();
-                        lxFS.Dispose();
-                        stream.Dispose();
+                        responseBody = await reader.ReadToEndAsync();
+                        Debug.WriteLine(responseBody);  // 打印解压后的内容
                     }
-
-                    string text = reader.ReadToEnd();
-                    Debug.WriteLine(text);
-
-                    Type type = typeof(T);
-                    if (type == typeof(string))
-                        return (T)Convert.ChangeType(text, typeof(T));
-                    else
-                        return JsonConvert.DeserializeObject<T>(text);
                 }
+                else
+                {
+                    // 如果没有压缩，直接读取
+                    responseBody = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine(responseBody);  // 打印返回的内容
+                }
+
+
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    var invalidChar = Path.GetInvalidFileNameChars();
+                    var newFileName = invalidChar.Aggregate(Path.GetFileName(fileName), (o, r) => (o.Replace(r.ToString(), string.Empty)));
+
+                    if (newFileName.Length > 200)
+                        newFileName = GetUniqueFileName(newFileName.Substring(0, 200) + Path.GetExtension(newFileName));
+                    else
+                        newFileName = GetUniqueFileName(fileName);
+
+                    var stream = response.Content.ReadAsStream();
+                    FileStream lxFS = File.Create(newFileName);
+                    await stream.CopyToAsync(lxFS);
+                    lxFS.Close();
+                    lxFS.Dispose();
+                    stream.Dispose();
+
+                    return default(T);
+                }
+
+                Type type = typeof(T);
+                if (type == typeof(string))
+                    return (T)Convert.ChangeType(responseBody, typeof(T));
+                else
+                    return JsonConvert.DeserializeObject<T>(responseBody);
             }
             catch
             {

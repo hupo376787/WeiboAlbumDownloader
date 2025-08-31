@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 5.3;
+        public static double currentVersion = 5.5;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -688,18 +688,18 @@ namespace WeiboAlbumDownloader
                                         GlobalVar.gSinceId = sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
                                     AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页", MessageEnum.Info);
 
-                                    if (res?.Data?.Cards?[0]?.Mblog?.User?.ScreenName == null)
+                                    if (res?.Data?.Cards?[res.Data.Cards.Count - 1]?.Mblog?.User?.ScreenName == null)
                                         return;
 
                                     //获取用户资料
                                     if (!cachedUserInfo)
                                     {
-                                        nickName = res?.Data?.Cards?[0]?.Mblog?.User?.ScreenName!;
+                                        nickName = res?.Data?.Cards?[res.Data.Cards.Count - 1]?.Mblog?.User?.ScreenName!;
                                         personalFolder = $"{nickName}({userId})";
                                         Directory.CreateDirectory(downloadFolder + "//" + personalFolder);
                                         using (File.Create(downloadFolder + "//" + personalFolder + "//" + nickName)) { }
 
-                                        headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(res?.Data?.Cards?[0]?.Mblog?.User?.AvatarHd!).Split("?")[0];
+                                        headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(res?.Data?.Cards?[res.Data.Cards.Count - 1]?.Mblog?.User?.AvatarHd!).Split("?")[0];
                                         var fileName = downloadFolder + "//" + personalFolder + "//" + Path.GetFileName(headUrl);
                                         //下载头像
                                         if (!File.Exists(fileName))
@@ -725,7 +725,7 @@ namespace WeiboAlbumDownloader
                                             }
                                             TextBlock_UID!.Text = userId;
                                             TextBlock_NickName.Text = nickName;
-                                            TextBlock_WeiboDesc.Text = res?.Data?.Cards?[0]?.Mblog?.User?.Description!;
+                                            TextBlock_WeiboDesc.Text = res?.Data?.Cards?[res.Data.Cards.Count - 1]?.Mblog?.User?.Description!;
                                         });
 
                                         cachedUserInfo = true;
