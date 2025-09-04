@@ -49,6 +49,7 @@ namespace WeiboAlbumDownloader
                 TextBox_PushPlusToken.Text = settings?.PushPlusToken;
                 ToggleSwitch_ShowHeadImage.IsChecked = settings?.ShowHeadImage;
                 ToggleSwitch_EnableDownloadVideo.IsChecked = settings?.EnableDownloadVideo;
+                ToggleSwitch_EnableDownloadLivePhoto.IsChecked = settings?.EnableDownloadLivePhoto;
                 ToggleSwitch_EnableShortenName.IsChecked = settings?.EnableShortenName;
                 ToggleSwitch_Crontab.IsChecked = settings?.EnableCrontab;
                 TextBox_Crontab.Text = settings?.Crontab;
@@ -118,6 +119,7 @@ namespace WeiboAlbumDownloader
                 PushPlusToken = TextBox_PushPlusToken.Text,
                 ShowHeadImage = (bool)ToggleSwitch_ShowHeadImage.IsChecked!,
                 EnableDownloadVideo = (bool)ToggleSwitch_EnableDownloadVideo.IsChecked!,
+                EnableDownloadLivePhoto = (bool)ToggleSwitch_EnableDownloadLivePhoto.IsChecked!,
                 EnableShortenName = (bool)ToggleSwitch_EnableShortenName.IsChecked!,
                 EnableCrontab = (bool)ToggleSwitch_Crontab.IsChecked!,
                 Crontab = TextBox_Crontab.Text,

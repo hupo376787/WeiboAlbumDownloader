@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 5.5;
+        public static double currentVersion = 5.6;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -254,9 +254,7 @@ namespace WeiboAlbumDownloader
 
                                                     AppendLog("已完成 " + Path.GetFileName(fileName), MessageEnum.Success);
 
-                                                    File.SetCreationTime(fileName, timestamp);
-                                                    File.SetLastWriteTime(fileName, timestamp);
-                                                    File.SetLastAccessTime(fileName, timestamp);
+                                                    SetFileTime(fileName, timestamp);
                                                 }
                                                 catch (Exception ex)
                                                 {
@@ -639,9 +637,7 @@ namespace WeiboAlbumDownloader
                                             await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileName);
 
                                             //修改文件日期时间为发博的时间
-                                            File.SetCreationTime(fileName, timestamp);
-                                            File.SetLastWriteTime(fileName, timestamp);
-                                            File.SetLastAccessTime(fileName, timestamp);
+                                            SetFileTime(fileName, timestamp);
 
                                             AppendLog("已完成 " + Path.GetFileName(fileName), MessageEnum.Success);
                                         }
@@ -866,9 +862,7 @@ namespace WeiboAlbumDownloader
                                                 await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
 
                                                 //修改文件日期时间为发博的时间
-                                                File.SetCreationTime(fileNamee, timestamp);
-                                                File.SetLastWriteTime(fileNamee, timestamp);
-                                                File.SetLastAccessTime(fileNamee, timestamp);
+                                                SetFileTime(fileNamee, timestamp);
 
                                                 AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
                                             }
@@ -910,9 +904,7 @@ namespace WeiboAlbumDownloader
                                                     await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
 
                                                     //修改文件日期时间为发博的时间
-                                                    File.SetCreationTime(fileNamee, timestamp);
-                                                    File.SetLastWriteTime(fileNamee, timestamp);
-                                                    File.SetLastAccessTime(fileNamee, timestamp);
+                                                    SetFileTime(fileNamee, timestamp);
 
                                                     AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
                                                 }
@@ -923,7 +915,7 @@ namespace WeiboAlbumDownloader
                                                 id++;
                                             }
                                         }
-                                        if (settings!.EnableDownloadVideo)
+                                        if (settings!.EnableDownloadLivePhoto)
                                         {
                                             foreach (var item in originalLivePhotos)
                                             {
@@ -955,9 +947,7 @@ namespace WeiboAlbumDownloader
                                                     await HttpHelper.GetAsync<AlbumDetailModel>(item, dataSource, cookie!, fileNamee);
 
                                                     //修改文件日期时间为发博的时间
-                                                    File.SetCreationTime(fileNamee, timestamp);
-                                                    File.SetLastWriteTime(fileNamee, timestamp);
-                                                    File.SetLastAccessTime(fileNamee, timestamp);
+                                                    SetFileTime(fileNamee, timestamp);
 
                                                     AppendLog("已完成 " + Path.GetFileName(fileNamee), MessageEnum.Success);
                                                 }
@@ -1110,6 +1100,13 @@ namespace WeiboAlbumDownloader
             {
                 AppendLog($"已开启Crontab定时任务，{CronExpressionDescriptor.ExpressionDescriptor.GetDescription(settings.Crontab)}", MessageEnum.Info);
             }
+        }
+
+        private void SetFileTime(string filename, DateTime timestamp)
+        {
+            File.SetCreationTime(filename, timestamp);
+            File.SetLastWriteTime(filename, timestamp);
+            File.SetLastAccessTime(filename, timestamp);
         }
 
         #region UI操作

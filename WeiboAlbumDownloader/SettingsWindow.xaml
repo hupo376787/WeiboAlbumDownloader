@@ -7,8 +7,8 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
   Title="设置"
-  Width="800"
-  Height="586"
+  Width="1200"
+  Height="567"
   FontFamily="微软雅黑"
   Icon="/weibo.ico"
   ResizeMode="NoResize"
@@ -151,7 +151,7 @@
           VerticalAlignment="Center"
           Foreground="Gray"
           Text="下载设置" />
-        <UniformGrid Margin="16,8,0,0" Columns="2">
+        <UniformGrid Margin="16,8,0,0" Columns="3">
           <mica:ToggleSwitch
             x:Name="ToggleSwitch_ShowHeadImage"
             Content="显示作者头像"
@@ -159,6 +159,10 @@
           <mica:ToggleSwitch
             x:Name="ToggleSwitch_EnableDownloadVideo"
             Content="下载视频"
+            Foreground="Gray" />
+          <mica:ToggleSwitch
+            x:Name="ToggleSwitch_EnableDownloadLivePhoto"
+            Content="下载Live Photo"
             Foreground="Gray" />
 
           <StackPanel Orientation="Horizontal">

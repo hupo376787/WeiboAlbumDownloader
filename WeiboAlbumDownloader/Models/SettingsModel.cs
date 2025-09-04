@@ -26,6 +26,8 @@ namespace WeiboAlbumDownloader.Models
         public DateTime? StartDateTime { get; set; }
         //开启下载视频功能，默认开启
         public bool EnableDownloadVideo { get; set; } = true;
+        //开启下载LivePhoto
+        public bool EnableDownloadLivePhoto { get; set; } = true;
         //启用后图片仅以日期+编号命名，文件名中不在包含博文内容
         public bool EnableShortenName { get; set; } = false;
 
