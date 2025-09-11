@@ -28,8 +28,8 @@ namespace WeiboAlbumDownloader.Helpers
             string responseBody = null;
             try
             {
-                logAction?.Invoke($"[Request URL]: {url}", MessageEnum.Info);
-                logAction?.Invoke($"[Request Cookie]: {cookie}", MessageEnum.Info);
+                //logAction?.Invoke($"[Request URL]: {url}", MessageEnum.Info);
+                //logAction?.Invoke($"[Request Cookie]: {cookie}", MessageEnum.Info);
 
                 var handler = new HttpClientHandler()
                 {
@@ -66,7 +66,7 @@ namespace WeiboAlbumDownloader.Helpers
                 }
 
                 logAction?.Invoke($"[Response Status Code]: {response.StatusCode}", MessageEnum.Info);
-                logAction?.Invoke($"[Response Body]: {responseBody}", MessageEnum.Info);
+                //logAction?.Invoke($"[Response Body]: {responseBody}", MessageEnum.Info);
 
                 response.EnsureSuccessStatusCode();
 
@@ -114,7 +114,7 @@ namespace WeiboAlbumDownloader.Helpers
                 logAction?.Invoke($"[Request Failed]: URL: {url}", MessageEnum.Error);
                 if (responseBody != null)
                 {
-                    logAction?.Invoke($"[Failed Response Body]: {responseBody}", MessageEnum.Error);
+                    //logAction?.Invoke($"[Failed Response Body]: {responseBody}", MessageEnum.Error);
                 }
                 logAction?.Invoke($"[Exception]: {ex.ToString()}", MessageEnum.Error);
                 throw;
