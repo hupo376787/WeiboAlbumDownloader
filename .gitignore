@@ -362,3 +362,7 @@ MigrationBackup/
 FodyWeavers.xsd
 /Demos/Demos.Algorithm/Demos.Algorithm.Toolbox.MaojiaExamine/CameraDevices.cs
 /Demos/Demos.Algorithm/Demo.Algorithm.Toolbox.Maojia/Demo.Algorithm.Toolbox.Maojia.csproj
+
+
+/WeiboAlbumDownloader/DownLoad
+Settings.json

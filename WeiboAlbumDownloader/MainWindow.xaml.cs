@@ -39,7 +39,7 @@ namespace WeiboAlbumDownloader
         /// m.cn是移动端api，可以从 https://m.weibo.cn/api/container/getIndex?type=uid&value=10000000000&containerid=10760310000000000&since_id=5040866311798795，since_id第一次为空，containerid以107603开头是获取时间线，100505开头是个人资料
         /// </summary>
         private WeiboDataSource dataSource = WeiboDataSource.WeiboCnMobile;
-        private int countPerPage = 100;
+        private int countPerPage = 90;
         private string downloadFolder = Environment.CurrentDirectory + "//DownLoad//";
         private SettingsModel? settings;
         private string? cookie;
@@ -140,6 +140,12 @@ namespace WeiboAlbumDownloader
                 //读取用户列表和设置
                 InitSettingsData();
 
+                // 读取用户输入的起始页码和SinceId
+                int.TryParse(TextBox_StartPage.Text, out int startPage);
+                long.TryParse(TextBox_StartSinceId.Text, out long startSinceId);
+                if (startPage <= 1) startPage = 1;
+                if (startSinceId <= 0) startSinceId = 0;
+
                 await Task.Run(async () =>
                 {
                     bool isSkip = false;
@@ -148,6 +154,8 @@ namespace WeiboAlbumDownloader
                     {
                         string nickName = string.Empty;
                         string headUrl = string.Empty;
+                        int page = startPage;
+                        long sinceId = startSinceId;
                         countDownloadedSkipToNextUser = 0;
                         isSkip = false;
                         AppendLog("开始下载" + userId, MessageEnum.Info);
@@ -177,7 +185,8 @@ namespace WeiboAlbumDownloader
                                         headUrl = item.cover_pic;
                                     }
 
-                                    int page = 1;
+                                    page = startPage;
+                                    int consecutiveEmptyPages = 0;
                                     while (true)
                                     {
                                         if (isSkip)
@@ -186,16 +195,17 @@ namespace WeiboAlbumDownloader
                                         GlobalVar.gPage = page;
 
                                         string albumUrl = $"https://photo.weibo.com/photos/get_all?uid={userId}&album_id={item.album_id}&count={countPerPage}&page={page}&type={item.type}";
-                                        var photos = await HttpHelper.GetAsync<AlbumDetailModel>(albumUrl, dataSource, cookie!);
+                                        var photos = await HttpHelper.GetAsync<AlbumDetailModel>(albumUrl, dataSource, cookie!, logAction: AppendLog);
                                         if (photos != null && photos.data?.photo_list != null && photos.data?.photo_list.Count > 0)
                                         {
+                                            consecutiveEmptyPages = 0;
                                             int photoCount = 1;
                                             string oldCaption = "";
                                             foreach (var photo in photos.data?.photo_list!)
                                             {
                                                 if (cancellationTokenSource.IsCancellationRequested)
                                                 {
-                                                    AppendLog("用户手动终止。", MessageEnum.Info);
+                                                    AppendLog($"用户手动终止，当前页码: {page}", MessageEnum.Info);
                                                     return;
                                                 }
 
@@ -221,17 +231,6 @@ namespace WeiboAlbumDownloader
                                                         AppendLog($"翻页到截至日期{settings?.StartDateTime}，停止下载");
                                                         return;
                                                     }
-                                                    //if (card?.ProfileTypeId == "proweibotop_" && timestamp < settings?.StartDateTime)
-                                                    //    continue;
-                                                    //else if (card?.ProfileTypeId == "proweibotop_" && timestamp >= settings?.StartDateTime)
-                                                    //{
-
-                                                    //}
-                                                    //else if (timestamp < settings?.StartDateTime)
-                                                    //{
-                                                    //    AppendLog($"翻页到截至日期{settings?.StartDateTime}，停止下载");
-                                                    //    return;
-                                                    //}
                                                 }
 
                                                 var invalidChar = System.IO.Path.GetInvalidFileNameChars();
@@ -264,7 +263,13 @@ namespace WeiboAlbumDownloader
                                         }
                                         else
                                         {
-                                            break;
+                                            consecutiveEmptyPages++;
+                                            AppendLog($"第 {consecutiveEmptyPages} 次遇到空页面，页码: {page}，准备尝试下一页...", MessageEnum.Warning);
+                                            if (consecutiveEmptyPages >= 3)
+                                            {
+                                                AppendLog("连续 3 次遇到空页面，停止下载当前相册。", MessageEnum.Info);
+                                                break;
+                                            }
                                         }
 
                                         //已存在的文件超过设置值，判定该用户下载过了
@@ -310,14 +315,14 @@ namespace WeiboAlbumDownloader
 
                                     Directory.CreateDirectory(downloadFolder + userId + "//" + item.PicTitle);
 
-                                    long sinceId = 0;
+                                    sinceId = startSinceId;
                                     while (true)
                                     {
                                         if (isSkip)
                                             break;
 
                                         string albumUrl = $"https://weibo.com/ajax/profile/getAlbumDetail?containerid={item.Containerid}&since_id={sinceId}";
-                                        var photos = await HttpHelper.GetAsync<AlbumDetailModel2>(albumUrl, dataSource, cookie!);
+                                        var photos = await HttpHelper.GetAsync<AlbumDetailModel2>(albumUrl, dataSource, cookie!, logAction: AppendLog);
                                         if (photos != null && photos.PhotoListData2?.PhotoListItem2 != null && photos.PhotoListData2?.PhotoListItem2.Count > 0)
                                         {
                                             GlobalVar.gSinceId = sinceId = photos.PhotoListData2.SinceId;
@@ -325,7 +330,7 @@ namespace WeiboAlbumDownloader
                                             {
                                                 if (cancellationTokenSource.IsCancellationRequested)
                                                 {
-                                                    AppendLog("用户手动终止。", MessageEnum.Info);
+                                                    AppendLog($"用户手动终止，当前页码: {page}", MessageEnum.Info);
                                                     return;
                                                 }
 
@@ -379,7 +384,7 @@ namespace WeiboAlbumDownloader
                         //源是weibo.cn的时候，获取的是微博时间线列表，解析html格式
                         else if (dataSource == WeiboDataSource.WeiboCn)
                         {
-                            int page = 1;
+                            page = startPage;
                             int totalPage = -1;
                             bool cachedUserInfo = false;
 
@@ -395,7 +400,7 @@ namespace WeiboAlbumDownloader
                                 //https://weibo.cn/xxxxxxxxxxxxx?page=2
                                 //https://weibo.cn/xxxxxxxxxxxxx/profile?page=2
                                 string url = $"https://weibo.cn/{userId}/profile?page={page}&filter=1";
-                                string text = await HttpHelper.GetAsync<string>(url, dataSource, cookie!);
+                                string text = await HttpHelper.GetAsync<string>(url, dataSource, cookie!, logAction: AppendLog);
                                 var doc = new HtmlDocument();
                                 doc.LoadHtml(text);
 
@@ -474,7 +479,7 @@ namespace WeiboAlbumDownloader
 
                                     if (cancellationTokenSource.IsCancellationRequested)
                                     {
-                                        AppendLog("用户手动终止。", MessageEnum.Info);
+                                        AppendLog($"用户手动终止，当前页码: {page}", MessageEnum.Info);
                                         return;
                                     }
 
@@ -666,10 +671,10 @@ namespace WeiboAlbumDownloader
                         else if (dataSource == WeiboDataSource.WeiboCnMobile)
                         {
                             //https://m.weibo.cn/api/container/getIndex?type=uid&value=10000000000&containerid=10760310000000000&since_id=5040866311798795
-                            long sinceId = 0;
+                            sinceId = startSinceId;
                             bool cachedUserInfo = false;
                             string personalFolder = userId;
-                            int page = 1;
+                            page = 1;
 
                             while (true)
                             {
@@ -677,7 +682,7 @@ namespace WeiboAlbumDownloader
                                     break;
 
                                 string url = $"https://m.weibo.cn/api/container/getIndex?type=uid&value={userId}&containerid=107603{userId}&since_id={sinceId}";
-                                var res = await HttpHelper.GetAsync<WeiboCnMobileModel>(url, dataSource, cookie!);
+                                var res = await HttpHelper.GetAsync<WeiboCnMobileModel>(url, dataSource, cookie!, logAction: AppendLog);
                                 if (res != null && res?.Ok == 1 && res?.Data != null && res?.Data?.Cards != null && res?.Data?.Cards?.Count > 0)
                                 {
                                     if (res?.Data?.CardlistInfo?.SinceId != null)
@@ -744,7 +749,7 @@ namespace WeiboAlbumDownloader
 
                                         if (cancellationTokenSource.IsCancellationRequested)
                                         {
-                                            AppendLog("用户手动终止。", MessageEnum.Info);
+                                            AppendLog($"用户手动终止，当前页码: {page}, SinceID: {sinceId}", MessageEnum.Info);
                                             return;
                                         }
                                         originalPics.Clear();
@@ -989,7 +994,7 @@ namespace WeiboAlbumDownloader
                         }
                         else
                         {
-                            AppendLog("遇到错误，请重试", MessageEnum.Error);
+                            AppendLog($"未能获取到用户 {userId} 的基本信息（如昵称），下载失败。最后尝试位置 Page: {page}, SinceID: {sinceId}。可能原因：Cookie失效、用户不存在或网络问题。", MessageEnum.Error);
                         }
                     }
                 });
@@ -1013,7 +1018,7 @@ namespace WeiboAlbumDownloader
             }
         }
 
-        private void AppendLog(string text, MessageEnum messageEnum = MessageEnum.Info)
+        public void AppendLog(string text, MessageEnum messageEnum = MessageEnum.Info)
         {
             string msg = $"{DateTime.Now} {text}";
             Debug.WriteLine(msg);
