@@ -15,6 +15,7 @@
   SizeChanged="MicaWindow_SizeChanged"
   SystemBackdropType="Acrylic"
   TitleBarType="WinUI"
+  WindowStartupLocation="CenterScreen"
   mc:Ignorable="d">
   <Window.Resources>
     <conv:ColorConverter x:Key="colorConverter" />
@@ -32,28 +33,29 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <StackPanel Grid.Column="0" Margin="8,0,0,0">
-        <mica:TextBox
-          x:Name="TextBox_WeiboId"
-          Height="32"
-          KeyUp="TextBox_WeiboId_KeyUp"
-          ToolTip="填写uid进行单用户下载或者uidList.txt进行批量下载"
-          Watermark="微博uid" />
-        <Grid Margin="0,4,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="起始页码:" VerticalAlignment="Center"/>
-            <mica:TextBox Grid.Column="1" x:Name="TextBox_StartPage" Height="32" Margin="4,0,0,0" Watermark="可选"/>
-            <TextBlock Grid.Column="2" Text="起始SinceID:" VerticalAlignment="Center" Margin="8,0,0,0"/>
-            <mica:TextBox Grid.Column="3" x:Name="TextBox_StartSinceId" Height="32" Margin="4,0,0,0" Watermark="可选"/>
-        </Grid>
-      </StackPanel>
-      <StackPanel Grid.Column="1" Orientation="Horizontal">
+      <mica:TextBox
+        x:Name="TextBox_WeiboId"
+        Grid.Column="0"
+        Height="32"
+        KeyUp="TextBox_WeiboId_KeyUp"
+        ToolTip="填写uid进行单用户下载或者uidList.txt进行批量下载"
+        Watermark="微博uid" />
+      <mica:TextBox
+        x:Name="TextBox_StartPage"
+        Grid.Column="1"
+        Height="32"
+        Margin="8,0,0,0"
+        Watermark="起始页码(可选)" />
+      <mica:TextBox
+        x:Name="TextBox_StartSinceId"
+        Grid.Column="2"
+        Height="32"
+        Margin="8,0,0,0"
+        Watermark="起始SinceID(可选)" />
+      <StackPanel Grid.Column="3" Orientation="Horizontal">
         <mica:Button
           Width="110"
           Height="32"
@@ -90,7 +92,7 @@
         </mica:Button>
       </StackPanel>
       <mica:Button
-        Grid.Column="2"
+        Grid.Column="4"
         Width="64"
         Height="32"
         Margin="8,0"
