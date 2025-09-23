@@ -674,20 +674,20 @@ namespace WeiboAlbumDownloader
                             sinceId = startSinceId;
                             bool cachedUserInfo = false;
                             string personalFolder = userId;
-                            page = 1;
+                            page = startPage;
 
                             while (true)
                             {
                                 if (isSkip)
                                     break;
 
-                                string url = $"https://m.weibo.cn/api/container/getIndex?type=uid&value={userId}&containerid=107603{userId}&since_id={sinceId}";
+                                string url = $"https://m.weibo.cn/api/container/getIndex?type=uid&value={userId}&containerid=107603{userId}&since_id={sinceId}&page={page}";
                                 var res = await HttpHelper.GetAsync<WeiboCnMobileModel>(url, dataSource, cookie!, logAction: AppendLog);
                                 if (res != null && res?.Ok == 1 && res?.Data != null && res?.Data?.Cards != null && res?.Data?.Cards?.Count > 0)
                                 {
                                     if (res?.Data?.CardlistInfo?.SinceId != null)
                                         GlobalVar.gSinceId = sinceId = (long)res?.Data?.CardlistInfo?.SinceId!;
-                                    AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页", MessageEnum.Info);
+                                    AppendLog($"获取到{res?.Data?.CardlistInfo?.Total}条数据，正在下载第{page}页，SinceId: {sinceId}", MessageEnum.Info);
 
                                     if (res?.Data?.Cards?[res.Data.Cards.Count - 1]?.Mblog?.User?.ScreenName == null)
                                         return;
