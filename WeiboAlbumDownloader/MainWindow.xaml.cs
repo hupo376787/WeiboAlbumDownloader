@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 5.8;
+        public static double currentVersion = 5.9;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -119,7 +119,7 @@ namespace WeiboAlbumDownloader
             }
         }
 
-        private async Task Start(string userId)
+        private async Task Start(string userId, int startPage = 1, long startSinceId = 0)
         {
             try
             {
@@ -140,9 +140,6 @@ namespace WeiboAlbumDownloader
                 //读取用户列表和设置
                 InitSettingsData();
 
-                // 读取用户输入的起始页码和SinceId
-                int.TryParse(TextBox_StartPage.Text, out int startPage);
-                long.TryParse(TextBox_StartSinceId.Text, out long startSinceId);
                 if (startPage <= 1) startPage = 1;
                 if (startSinceId <= 0) startSinceId = 0;
 
@@ -1131,9 +1128,13 @@ namespace WeiboAlbumDownloader
                 string pattern = @"\d+";  // 匹配一个或多个数字
                 Match match = Regex.Match(TextBox_WeiboId.Text.Trim(), pattern);
 
+                // 读取用户输入的起始页码和SinceId
+                int.TryParse(TextBox_StartPage.Text, out int startPage);
+                long.TryParse(TextBox_StartSinceId.Text, out long startSinceId);
+
                 if (match.Success)
                 {
-                    await Start(match.Value);
+                    await Start(match.Value, startPage, startSinceId);
                 }
                 else
                 {
@@ -1219,12 +1220,7 @@ namespace WeiboAlbumDownloader
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
-                if (isDownloading)
-                    return;
-
-                isDownloading = true;
-                tbDownload.Text = "停止下载";
-                await Start(TextBox_WeiboId.Text.Trim());
+                StartDownLoad(null, null);
             }
         }
 
