@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 5.9;
+        public static double currentVersion = 6.1;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -699,16 +699,25 @@ namespace WeiboAlbumDownloader
 
                                         headUrl = "https://tvax2.sinaimg.cn/large/" + Path.GetFileName(res?.Data?.Cards?[res.Data.Cards.Count - 1]?.Mblog?.User?.AvatarHd!).Split("?")[0];
                                         var fileName = downloadFolder + "//" + personalFolder + "//" + Path.GetFileName(headUrl);
+                                        bool downloadHeadImageSuccess = true;
                                         //下载头像
                                         if (!File.Exists(fileName))
                                         {
-                                            await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
+                                            try
+                                            {
+                                                await HttpHelper.GetAsync<AlbumDetailModel>(headUrl, dataSource, cookie!, fileName);
+                                            }
+                                            catch
+                                            {
+                                                downloadHeadImageSuccess = false;
+                                                AppendLog($"头像下载失败", MessageEnum.Warning);
+                                            }
                                         }
 
 
                                         Image_Head?.Dispatcher.InvokeAsync(() =>
                                         {
-                                            if (settings.ShowHeadImage)
+                                            if (settings.ShowHeadImage && downloadHeadImageSuccess)
                                             {
                                                 var bytes = File.ReadAllBytes(fileName);
                                                 MemoryStream ms = new MemoryStream(bytes);
