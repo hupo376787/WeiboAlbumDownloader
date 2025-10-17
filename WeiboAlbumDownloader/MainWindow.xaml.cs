@@ -1000,7 +1000,7 @@ namespace WeiboAlbumDownloader
                         }
                         else
                         {
-                            AppendLog($"未能获取到用户 {userId} 的基本信息（如昵称），下载失败。最后尝试位置 Page: {page}, SinceID: {sinceId}。可能原因：Cookie失效、用户不存在或网络问题。", MessageEnum.Error);
+                            AppendLog($"未能获取到用户 {userId} 的基本信息（如昵称），下载失败。最后尝试位置 Page: {page}, SinceID: {sinceId}。可能原因：用户不存在、暂无微博内容、Cookie失效或网络问题。", MessageEnum.Error);
                         }
                     }
                 });
