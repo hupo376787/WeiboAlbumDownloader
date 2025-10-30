@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 6.1;
+        public static double currentVersion = 6.2;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -70,6 +70,12 @@ namespace WeiboAlbumDownloader
                     while (true)
                     {
                         await Task.Delay((int)cron.GetSleepMilliseconds(DateTime.Now));
+
+                        if (settings?.EnableCrontab != true)
+                        {
+                            continue;
+                        }
+
                         AppendLog(DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "开启定时任务");
 
                         foreach (var item in uids)
