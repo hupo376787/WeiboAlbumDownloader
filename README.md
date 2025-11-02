@@ -15,7 +15,12 @@
 
 # 推荐类似
 
-[银杏下载器(抖音/快手/小红书/推特作者主页作品下载) 抖音解析、快手解析、小红书解析、推特解析]](https://github.com/hupo376787/GinkgoDownloader)
+[银杏下载器(抖音/快手/小红书/推特作者主页作品下载) 抖音解析、快手解析、小红书解析、推特解析](https://github.com/hupo376787/GinkgoDownloader)
+
+
+# 最佳CP
+
+[银杏美女吧(基于深度学习和计算机视觉领域的尖端YOLO11模型，快速检测并筛选出需要的美女图片。) ](https://github.com/hupo376787/GinkgoBeautySelector)
 
 
 
