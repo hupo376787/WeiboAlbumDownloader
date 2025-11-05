@@ -30,7 +30,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 6.2;
+        public static double currentVersion = 7.1;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -793,14 +793,28 @@ namespace WeiboAlbumDownloader
                                                 return;
                                             }
                                         }
+                                        Debug.WriteLine(card?.Mblog?.Text);
 
-
+                                        //如果PicNum大于PicIds.Count，那么图片可能超过9张图。
                                         if (card?.Mblog?.PicIds != null && (bool)card?.Mblog?.PicIds?.Any()!)
                                         {
-                                            foreach (var item in card?.Mblog?.PicIds!)
+                                            if (card?.Mblog?.PicIds!.Count == card?.Mblog?.PicNum)
                                             {
-                                                var photoUrl = "https://wx4.sinaimg.cn/large/" + Path.GetFileName(item) + ".jpg";
-                                                originalPics.Add(photoUrl);
+                                                foreach (var item in card?.Mblog?.PicIds!)
+                                                {
+                                                    var photoUrl = "https://wx4.sinaimg.cn/large/" + Path.GetFileName(item) + ".jpg";
+                                                    originalPics.Add(photoUrl);
+                                                }
+                                            }
+                                            //多于9图
+                                            else
+                                            {
+                                                var picIds = await WeiboMidHelper.GetImageIdsByMidAsync(card?.Mblog?.Mid!, settings?.WeiboComCookie);
+                                                foreach (var item in picIds)
+                                                {
+                                                    var photoUrl = "https://wx4.sinaimg.cn/large/" + Path.GetFileName(item) + ".jpg";
+                                                    originalPics.Add(photoUrl);
+                                                }
                                             }
                                         }
                                         if (card?.Mblog?.LivePhoto != null && (bool)(card?.Mblog?.LivePhoto?.Any()!))
