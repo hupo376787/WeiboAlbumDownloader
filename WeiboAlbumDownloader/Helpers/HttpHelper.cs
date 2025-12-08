@@ -112,9 +112,9 @@ namespace WeiboAlbumDownloader.Helpers
             catch (Exception ex)
             {
                 logAction?.Invoke($"[Request Failed]: URL: {url}", MessageEnum.Error);
-                if (responseBody != null)
+                if (responseBody != null && responseBody.Contains("<title>登录 - 微博</title>"))
                 {
-                    //logAction?.Invoke($"[Failed Response Body]: {responseBody}", MessageEnum.Error);
+                    logAction?.Invoke($"[Cookie可能失效]: {responseBody}", MessageEnum.Error);
                 }
                 logAction?.Invoke($"[Exception]: {ex.ToString()}", MessageEnum.Error);
                 throw;
