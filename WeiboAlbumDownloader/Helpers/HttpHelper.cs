@@ -40,9 +40,9 @@ namespace WeiboAlbumDownloader.Helpers
                 request.Headers.Add("Referer", "https://m.weibo.cn/");
                 if (string.IsNullOrEmpty(fileName))
                 {
-                    request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36");
+                    request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36");
                     request.Headers.Add("Accept", "application/json, text/plain, */*");
-                    request.Headers.Add("Accept-Encoding", "gzip, deflate, br");
+                    request.Headers.Add("Accept-Encoding", "gzip, deflate, br, zstd");
                     request.Headers.Add("Accept-Language", "zh-CN,zh;q=0.9");
                     request.Headers.Add("Cookie", cookie);
                 }
