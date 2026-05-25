@@ -5,6 +5,7 @@ using Sentry;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using TimeCrontab;
 using WeiboAlbumDownloader.Enums;
@@ -30,7 +33,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 7.3;
+        public static double currentVersion = 7.5;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -40,7 +43,7 @@ namespace WeiboAlbumDownloader
         /// </summary>
         private WeiboDataSource dataSource = WeiboDataSource.WeiboCnMobile;
         private int countPerPage = 90;
-        private string downloadFolder = Environment.CurrentDirectory + "//DownLoad//";
+        private string downloadFolder = Path.Combine(AppContext.BaseDirectory, "Download");
         private SettingsModel? settings;
         private string? cookie;
         private List<string> uids = new List<string>();
@@ -48,7 +51,13 @@ namespace WeiboAlbumDownloader
         private int countDownloadedSkipToNextUser;
         private bool isDownloading;
         private CancellationTokenSource? cancellationTokenSource;
+
+        private const int MaxSuggestionCount = 50;
+        public ObservableCollection<string> FilteredDownloadFolderNames { get; set; } = new ObservableCollection<string>();
+
+
         public ObservableCollection<MessageModel> Messages { get; set; } = new ObservableCollection<MessageModel>();
+        public ObservableCollection<string> DownloadFolderNames { get; set; } = new ObservableCollection<string>();
 
         public MainWindow()
         {
@@ -60,6 +69,9 @@ namespace WeiboAlbumDownloader
 
             Directory.CreateDirectory(downloadFolder);
             ListView_Messages.ItemsSource = Messages;
+
+            LoadDownloadFolderNames();
+            ListBox_WeiboIdSuggestions.ItemsSource = FilteredDownloadFolderNames;
 
             //定时任务
             if (settings?.Crontab != null)
@@ -1242,7 +1254,37 @@ namespace WeiboAlbumDownloader
 
         private void ListView_OpenDownloadFolder(object sender, RoutedEventArgs e)
         {
-            Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
+            string weiboText = TextBox_WeiboId.Text?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(weiboText))
+            {
+                Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
+                return;
+            }
+
+            string pattern = @"\d+";
+            Match match = Regex.Match(weiboText, pattern);
+
+            if (!match.Success)
+            {
+                Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
+                return;
+            }
+
+            string? targetFolder = Directory.GetDirectories(downloadFolder)
+                .FirstOrDefault(x =>
+                    (Path.GetFileName(x) ?? string.Empty)
+                    .Contains(match.Value, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(targetFolder) && Directory.Exists(targetFolder))
+            {
+                Process.Start("explorer.exe", Path.GetFullPath(targetFolder));
+            }
+            else
+            {
+                AppendLog($"未找到包含 {match.Value} 的下载文件夹", MessageEnum.Warning);
+                Process.Start("explorer.exe", Path.GetFullPath(downloadFolder));
+            }
         }
 
         private async void TextBox_WeiboId_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
@@ -1269,5 +1311,115 @@ namespace WeiboAlbumDownloader
         }
         #endregion
 
+        #region 筛选
+        private void LoadDownloadFolderNames()
+        {
+            DownloadFolderNames.Clear();
+
+            string downloadPath = Path.Combine(AppContext.BaseDirectory, "Download");
+
+            if (!Directory.Exists(downloadPath))
+            {
+                Directory.CreateDirectory(downloadPath);
+                return;
+            }
+
+            var folderNames = Directory.GetDirectories(downloadPath)
+                .Select(Path.GetFileName)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .OrderBy(x => x);
+
+            foreach (var folderName in folderNames)
+            {
+                DownloadFolderNames.Add(folderName!);
+            }
+        }
+
+        private void TextBox_WeiboId_TextChanged(object sender, TextChangedEventArgs e) { UpdateWeiboIdSuggestions(); }
+
+        private void TextBox_WeiboId_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Down && FilteredDownloadFolderNames.Count > 0) { Popup_WeiboIdSuggestions.IsOpen = true; ListBox_WeiboIdSuggestions.SelectedIndex = 0; ListBox_WeiboIdSuggestions.Focus(); e.Handled = true; return; }
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                Popup_WeiboIdSuggestions.IsOpen = false;
+                StartDownLoad(null, null);
+                e.Handled = true;
+            }
+        }
+
+        private void ListBox_WeiboIdSuggestions_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                CommitSelectedWeiboId(); e.Handled = true;
+            }
+            else if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                Popup_WeiboIdSuggestions.IsOpen = false;
+                TextBox_WeiboId.Focus(); e.Handled = true;
+            }
+        }
+
+        private void ListBox_WeiboIdSuggestions_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            CommitSelectedWeiboId();
+        }
+
+        private void CommitSelectedWeiboId()
+        {
+            if (ListBox_WeiboIdSuggestions.SelectedItem is not string selected) { return; }
+            TextBox_WeiboId.Text = selected;
+            TextBox_WeiboId.CaretIndex = TextBox_WeiboId.Text.Length;
+            Popup_WeiboIdSuggestions.IsOpen = false;
+            TextBox_WeiboId.Focus();
+        }
+
+        private void UpdateWeiboIdSuggestions()
+        {
+            string keyword = TextBox_WeiboId.Text?.Trim() ?? string.Empty;
+            FilteredDownloadFolderNames.Clear();
+
+            IEnumerable<string> matches;
+
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                matches = DownloadFolderNames;
+            }
+            else
+            {
+                matches = DownloadFolderNames
+                    .Where(x => x.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+            }
+
+            foreach (var item in matches)
+            {
+                FilteredDownloadFolderNames.Add(item);
+            }
+
+            Popup_WeiboIdSuggestions.IsOpen =
+                FilteredDownloadFolderNames.Count > 0;
+        }
+
+        private void TextBox_WeiboId_GotFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateWeiboIdSuggestions();
+        }
+
+        #endregion
+
+        private void RootGrid_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (!TextBox_WeiboId.IsMouseOver && !Popup_WeiboIdSuggestions.IsMouseOver)
+            {
+                Popup_WeiboIdSuggestions.IsOpen = false;
+                this.Focus();
+            }
+        }
+
+        private void ButtonWeiboIdSuggestions_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateWeiboIdSuggestions();
+        }
     }
 }
