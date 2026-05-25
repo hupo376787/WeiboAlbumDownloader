@@ -7,8 +7,8 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
   Title="设置"
-  Width="1200"
-  Height="567"
+  Width="1080"
+  Height="720"
   FontFamily="微软雅黑"
   Icon="/weibo.ico"
   ResizeMode="NoResize"
@@ -20,7 +20,7 @@
     <Grid>
       <StackPanel Margin="8">
         <TextBlock
-          Margin="8,0,0,0"
+          Margin="8,16,0,0"
           VerticalAlignment="Center"
           Foreground="Gray"
           Text="数据源" />
@@ -30,7 +30,7 @@
           ToolTip="不懂的话选择m.weibo.cn" />
 
         <TextBlock
-          Margin="8,8,0,0"
+          Margin="8,32,0,0"
           VerticalAlignment="Center"
           Foreground="Gray"
           Text="Cookie" />
@@ -96,7 +96,7 @@
 
         <TextBlock
           Grid.Row="1"
-          Margin="16,8,8,0"
+          Margin="16,16,8,0"
           VerticalAlignment="Center"
           Foreground="Gray"
           TextWrapping="Wrap">
@@ -110,7 +110,7 @@
         </TextBlock>
 
         <TextBlock
-          Margin="8,16,0,0"
+          Margin="8,32,0,0"
           VerticalAlignment="Center"
           Foreground="Gray"
           Text="消息推送" />
@@ -147,7 +147,7 @@
         </Grid>
 
         <TextBlock
-          Margin="8,16,0,0"
+          Margin="8,32,0,0"
           VerticalAlignment="Center"
           Foreground="Gray"
           Text="下载设置" />
@@ -234,7 +234,7 @@
         </UniformGrid>
 
         <StackPanel
-          Margin="0,16,0,0"
+          Margin="0,50,0,0"
           HorizontalAlignment="Center"
           Orientation="Horizontal">
           <mica:Button
@@ -242,7 +242,8 @@
             Height="32"
             Background="#FFBF00"
             Click="Confirm_Click"
-            Content="OK" />
+            Content="OK"
+            Foreground="White" />
           <mica:Button
             Width="100"
             Height="32"

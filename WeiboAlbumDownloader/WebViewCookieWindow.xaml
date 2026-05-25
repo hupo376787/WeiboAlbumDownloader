@@ -1,0 +1,43 @@
+﻿<mica:MicaWindow
+  x:Class="WeiboAlbumDownloader.WebViewCookieWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mica="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
+  xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+  Title="扫码获取 Cookie"
+  Width="1080"
+  Height="720"
+  FontFamily="微软雅黑"
+  Icon="/weibo.ico"
+  SystemBackdropType="Acrylic"
+  TitleBarType="WinUI"
+  WindowStartupLocation="CenterOwner">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition />
+    </Grid.RowDefinitions>
+
+    <DockPanel Margin="8">
+      <TextBlock
+        VerticalAlignment="Center"
+        Foreground="Gray"
+        Text="请在页面中扫码登录微博，登录成功后点击右侧按钮获取 Cookie。" />
+
+      <mica:Button
+        Width="140"
+        Height="32"
+        Margin="8,0,0,0"
+        HorizontalAlignment="Right"
+        Click="GetCookie_Click"
+        Content="已登录，获取 Cookie"
+        DockPanel.Dock="Right" />
+    </DockPanel>
+
+    <wv2:WebView2
+      x:Name="WebView"
+      Grid.Row="1"
+      Margin="8" />
+  </Grid>
+</mica:MicaWindow>

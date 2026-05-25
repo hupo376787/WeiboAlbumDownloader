@@ -62,13 +62,36 @@ namespace WeiboAlbumDownloader
         private void GetCookie(object sender, RoutedEventArgs e)
         {
             var tag = (sender as MicaWPF.Controls.Button)?.Tag as string;
+
+            WeiboDataSource dataSource;
             if (tag == "cn")
             {
-                TextBox_WeiboCnCookie.Text = SeleniumHelper.GetCookie(Enums.WeiboDataSource.WeiboCnMobile);
+                dataSource = WeiboDataSource.WeiboCnMobile;
             }
             else if (tag == "com")
             {
-                TextBox_WeiboComCookie.Text = SeleniumHelper.GetCookie(Enums.WeiboDataSource.WeiboCom1);
+                dataSource = WeiboDataSource.WeiboCom1;
+            }
+            else
+            {
+                return;
+            }
+
+            var window = new WebViewCookieWindow(dataSource)
+            {
+                Owner = this
+            };
+
+            if (window.ShowDialog() == true && !string.IsNullOrWhiteSpace(window.Cookie))
+            {
+                if (tag == "cn")
+                {
+                    TextBox_WeiboCnCookie.Text = window.Cookie;
+                }
+                else if (tag == "com")
+                {
+                    TextBox_WeiboComCookie.Text = window.Cookie;
+                }
             }
         }
 

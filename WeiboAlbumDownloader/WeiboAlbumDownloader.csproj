@@ -8,7 +8,7 @@
     <ApplicationIcon>weibo.ico</ApplicationIcon>
     <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
     <Company>Caiwei Studio</Company>
-    <Version>7.5.0</Version>
+    <Version>8.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,9 +39,8 @@
     <PackageReference Include="CronExpressionDescriptor" Version="2.44.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="MicaWPF" Version="6.3.2" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.40.0" />
-    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="143.0.7499.19200" />
     <PackageReference Include="Sentry" Version="6.0.0" />
     <PackageReference Include="TimeCrontab" Version="3.7.0" />
   </ItemGroup>
