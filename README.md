@@ -1,3 +1,6 @@
+# 停止维护停止
+本仓库使用的api不稳定，建议更换到新仓库，功能稳定且强大。 👉👉👉[HelloCrab](https://github.com/hupo376787/HelloCrab)
+
 # WeiboAlbumDownloader
 微博相册下载工具C#版，界面全新设计
 
